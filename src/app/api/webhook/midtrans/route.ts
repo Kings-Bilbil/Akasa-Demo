@@ -29,7 +29,7 @@ export async function POST(request: Request) {
       if (order) {
         // Ambil "no" barang dari Accurate menggunakan ID (idealnya ini disimpan di cache juga)
         // Demi demo, kita anggap accurate_item_id sudah cukup (biasanya butuh item no)
-        const branchAccurateId = parseInt(order.branches_cache.accurate_branch_id);
+        const branchAccurateId = parseInt((order.branches_cache as any).accurate_branch_id);
         // ... Logika kirim SO
         console.log("Membuat Sales Order di cabang:", branchAccurateId);
         // await createSalesOrder(branchAccurateId, items);
