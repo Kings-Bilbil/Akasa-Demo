@@ -32,7 +32,7 @@ export async function createSalesReceipt(branchId: number, invoiceId: number, to
   const payload = {
     branchId: branchId,
     customerNo: 'C.00001',
-    bankNo: 'MIDTRANS', // WAJIB: Akun Kas/Bank di Accurate harus memiliki kode akun "MIDTRANS"
+    bankNo: '110104', // Akun Kas Midtrans sesuai setup di Accurate
     chequeAmount: totalAmount,
     detailItem: [
       {
