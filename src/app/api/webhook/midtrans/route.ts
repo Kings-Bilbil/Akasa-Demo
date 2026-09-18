@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/utils/supabase/admin';
-import { createSalesOrder } from '@/services/accurateOrder';
+import { createSalesInvoice, createSalesReceipt } from '@/services/accurateOrder';
 
 export async function POST(request: Request) {
   try {
@@ -14,11 +14,11 @@ export async function POST(request: Request) {
       // 1. Update status pesanan di Supabase
       await supabase.from('orders').update({ status: 'paid' }).eq('id', orderId);
       
-      // 2. Tembak Sales Order ke Accurate
-      // Ambil detail pesanan & barang dari Supabase
+      // 2. Tembak Sales Invoice & Receipt ke Accurate (Opsi B)
       const { data: order } = await supabase
         .from('orders')
         .select(`
+          total_amount,
           branch_id, 
           branches_cache(accurate_branch_id),
           order_items(quantity, unit_price, products_cache(accurate_item_id))
@@ -27,9 +27,8 @@ export async function POST(request: Request) {
         .single();
         
       if (order) {
-        // Ambil "no" barang dari Accurate menggunakan ID (idealnya ini disimpan di cache juga)
-        // Demi demo, kita anggap accurate_item_id sudah cukup (biasanya butuh item no)
         const branchAccurateId = parseInt((order.branches_cache as any).accurate_branch_id);
+        const totalAmount = Number(order.total_amount);
         const items = order.order_items.map((i: any) => ({
           accurate_item_id: (i.products_cache as any).accurate_item_id,
           qty: Number(i.quantity),
@@ -37,13 +36,24 @@ export async function POST(request: Request) {
         }));
 
         try {
-          console.log("Membuat Sales Order di cabang:", branchAccurateId);
-          const soResult = await createSalesOrder(branchAccurateId, items);
-          if (soResult && soResult.r && soResult.r.id) {
-            await supabase.from('orders').update({ accurate_sales_order_id: soResult.r.id.toString() }).eq('id', orderId);
-            await supabase.from('sync_logs').insert({ related_order_id: orderId, action: 'CREATE_SALES_ORDER', status: 'success', message: 'SO berhasil dibuat di Accurate' });
+          console.log("Membuat Faktur Penjualan di cabang:", branchAccurateId);
+          // Langkah 1: Buat Faktur Penjualan (Memotong stok fisik)
+          const siResult = await createSalesInvoice(branchAccurateId, items);
+          if (siResult && siResult.r && siResult.r.id) {
+            const invoiceId = siResult.r.id;
+            await supabase.from('orders').update({ accurate_sales_order_id: invoiceId.toString() }).eq('id', orderId);
+            
+            // Langkah 2: Buat Penerimaan Penjualan (Melunasi tagihan Faktur ke Kas Midtrans)
+            console.log("Membuat Penerimaan Penjualan (Lunas) untuk faktur:", invoiceId);
+            const srResult = await createSalesReceipt(branchAccurateId, invoiceId, totalAmount);
+            if (srResult && srResult.r && srResult.r.id) {
+               await supabase.from('orders').update({ accurate_sales_receipt_id: srResult.r.id.toString() }).eq('id', orderId);
+               await supabase.from('sync_logs').insert({ related_order_id: orderId, action: 'CREATE_SALES_INVOICE_AND_RECEIPT', status: 'success', message: 'Faktur & Penerimaan (Lunas) berhasil dibuat di Accurate' });
+            } else {
+               await supabase.from('sync_logs').insert({ related_order_id: orderId, action: 'CREATE_SALES_RECEIPT', status: 'error', message: 'Faktur berhasil, tapi gagal membuat Penerimaan Penjualan.' });
+            }
           } else {
-            throw new Error("Respon Accurate tidak mengembalikan ID SO");
+            throw new Error("Respon Accurate tidak mengembalikan ID Faktur");
           }
         } catch (e: any) {
           const errStr = String(e.message || e).toLowerCase();
@@ -53,7 +63,7 @@ export async function POST(request: Request) {
           else if (errStr.includes('timeout')) userMsg = 'Server Accurate terlalu lama merespons.';
           else if (errStr.includes('no_item') || errStr.includes('not found')) userMsg = 'Barang tidak ditemukan di Accurate.';
           
-          await supabase.from('sync_logs').insert({ related_order_id: orderId, action: 'CREATE_SALES_ORDER', status: 'error', message: userMsg });
+          await supabase.from('sync_logs').insert({ related_order_id: orderId, action: 'CREATE_SALES_INVOICE', status: 'error', message: userMsg });
         }
       }
       
