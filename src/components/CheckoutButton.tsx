@@ -9,6 +9,17 @@ export default function CheckoutButton({ product, branches, customerId }: { prod
   const [selectedBranch, setSelectedBranch] = useState(branches.find(b => b.stock === undefined || b.stock > 0)?.id || '');
   const [popupData, setPopupData] = useState<{message: string, type: 'success' | 'error'} | null>(null);
 
+  const [quantity, setQuantity] = useState(1);
+  const selectedBranchObj = branches.find(b => b.id === selectedBranch);
+  const maxStock = selectedBranchObj?.stock !== undefined ? selectedBranchObj.stock : 999;
+
+  // Pastikan quantity tidak melebihi stok cabang yang dipilih
+  useEffect(() => {
+    if (quantity > maxStock && maxStock > 0) {
+      setQuantity(maxStock);
+    }
+  }, [selectedBranch, maxStock, quantity]);
+
   useEffect(() => {
     // Muat script Midtrans Snap
     const snapScript = "https://app.sandbox.midtrans.com/snap/snap.js";
@@ -25,48 +36,41 @@ export default function CheckoutButton({ product, branches, customerId }: { prod
 
   const handleCheckout = async () => {
     if (!selectedBranch) {
-      setPopupData({ message: "Pilih cabang pengiriman terlebih dahulu!", type: 'error' });
+      setPopupData({ message: "Silakan pilih cabang pengambilan terlebih dahulu.", type: 'error' });
       return;
     }
+    
     setLoading(true);
-
     try {
-      const orderId = uuidv4();
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          orderId: orderId,
-          total: product.price,
-          // Menggunakan ID customer yang sedang login
+          orderId: `ORD-${Date.now()}`,
+          total: product.price * quantity,
           customerId: customerId, 
           branchId: selectedBranch,
-          items: [{ id: product.id, quantity: 1, price: product.price }]
+          items: [{ id: product.id, quantity: quantity, price: product.price }]
         })
       });
       
       const data = await res.json();
-      if (data.token) {
-        // Panggil popup Midtrans Snap
+      
+      if (res.ok && data.token) {
         (window as any).snap.pay(data.token, {
-          onSuccess: async function (result: any) {
-            // Karena kita di localhost, webhook tidak bisa ditembak oleh Midtrans.
-            // Jadi kita picu penyelesaian pesanan langsung dari browser!
-            await fetch('/api/checkout/success', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ orderId: orderId })
-            });
-            setPopupData({ message: "Pembayaran Berhasil! Mengalihkan...", type: 'success' });
-            setTimeout(() => window.location.reload(), 2000);
+          onSuccess: function() {
+            setPopupData({ message: "Pembayaran berhasil! Sistem sedang memproses pesanan Anda ke Accurate...", type: 'success' });
+            setTimeout(() => {
+              window.location.href = "/dashboard";
+            }, 3000);
           },
-          onPending: function(result: any){
-            setPopupData({ message: "Menunggu pembayaran Anda!", type: 'success' });
+          onPending: function() {
+            setPopupData({ message: "Menunggu pembayaran Anda.", type: 'success' });
           },
-          onError: function(result: any){
-            setPopupData({ message: "Pembayaran gagal!", type: 'error' });
+          onError: function() {
+            setPopupData({ message: "Terjadi kesalahan saat memproses pembayaran.", type: 'error' });
           },
-          onClose: function(){
+          onClose: function() {
             setPopupData({ message: "Anda menutup jendela tanpa menyelesaikan pembayaran", type: 'error' });
           }
         });
@@ -82,6 +86,23 @@ export default function CheckoutButton({ product, branches, customerId }: { prod
   return (
     <div className="mt-8 border-t pt-6">
       {popupData && <Popup message={popupData.message} type={popupData.type} onClose={() => setPopupData(null)} />}
+      
+      <div className="mb-4">
+        <label className="block text-sm font-bold text-gray-700 mb-2">Jumlah Beli:</label>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setQuantity(Math.max(1, quantity - 1))}
+            className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-700 hover:bg-gray-200"
+          >-</button>
+          <span className="text-lg font-bold w-12 text-center text-gray-900">{quantity}</span>
+          <button 
+            onClick={() => setQuantity(Math.min(maxStock, quantity + 1))}
+            className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+            disabled={quantity >= maxStock}
+          >+</button>
+        </div>
+      </div>
+
       <label className="block text-sm font-bold text-gray-700 mb-2">Pilih Cabang Pengambilan:</label>
       <select 
         className="w-full mb-4 p-3 border rounded-lg text-gray-900 bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500"
@@ -98,6 +119,11 @@ export default function CheckoutButton({ product, branches, customerId }: { prod
         })}
       </select>
       
+      <div className="flex justify-between items-center mb-4">
+        <span className="text-sm text-gray-500">Total Belanja:</span>
+        <span className="text-xl font-bold text-gray-900">Rp {(product.price * quantity).toLocaleString('id-ID')}</span>
+      </div>
+
       <button 
         onClick={handleCheckout} 
         disabled={loading || !selectedBranch}

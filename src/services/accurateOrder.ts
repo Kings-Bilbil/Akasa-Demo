@@ -14,14 +14,15 @@ export async function createSalesOrder(branchId: number, items: {accurate_item_i
 }
 
 // OPSI B: Buat Faktur Penjualan langsung (Memotong stok fisik gudang)
-export async function createSalesInvoice(branchId: number, items: {accurate_item_id: string, qty: number, price: number}[]) {
+export async function createSalesInvoice(branchId: number, items: {accurate_item_id: string, qty: number, price: number, warehouseId?: number}[]) {
   const payload = {
     branchId: branchId,
     customerNo: 'C.00001', // ID default pelanggan (Budi Vape)
     detailItem: items.map(i => ({
       itemNo: i.accurate_item_id,
       quantity: i.qty,
-      unitPrice: i.price
+      unitPrice: i.price,
+      warehouseId: i.warehouseId
     }))
   };
   return await fetchAccurateAPI('/sales-invoice/save.do', 'POST', payload);

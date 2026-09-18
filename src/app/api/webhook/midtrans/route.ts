@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/utils/supabase/admin';
+import { fetchAccurateAPI } from '@/services/accurate';
 import { createSalesInvoice, createSalesReceipt } from '@/services/accurateOrder';
 
 export async function POST(request: Request) {
@@ -20,7 +21,7 @@ export async function POST(request: Request) {
         .select(`
           total_amount,
           branch_id, 
-          branches_cache(accurate_branch_id),
+          branches_cache(accurate_branch_id, name),
           order_items(quantity, unit_price, products_cache(accurate_item_id))
         `)
         .eq('id', orderId)
@@ -28,11 +29,30 @@ export async function POST(request: Request) {
         
       if (order) {
         const branchAccurateId = parseInt((order.branches_cache as any).accurate_branch_id);
+        const branchName = (order.branches_cache as any).name;
         const totalAmount = Number(order.total_amount);
+
+        // Cari warehouseId yang sesuai dengan nama cabang (Fuzzy Match)
+        let warehouseId: number | undefined = undefined;
+        try {
+          const whRes = await fetchAccurateAPI('/warehouse/list.do?fields=id,name');
+          if (whRes && whRes.d) {
+            const cleanName = (n: string) => n.toLowerCase().replace('gudang', '').replace('cabang', '').trim();
+            const targetName = cleanName(branchName);
+            const matchedWarehouse = whRes.d.find((w: any) => cleanName(w.name) === targetName);
+            if (matchedWarehouse) {
+              warehouseId = matchedWarehouse.id;
+            }
+          }
+        } catch (err) {
+          console.error("Gagal mengambil warehouse list:", err);
+        }
+
         const items = order.order_items.map((i: any) => ({
           accurate_item_id: (i.products_cache as any).accurate_item_id,
           qty: Number(i.quantity),
-          price: Number(i.unit_price)
+          price: Number(i.unit_price),
+          warehouseId: warehouseId
         }));
 
         try {

@@ -1,0 +1,1 @@
+import { NextResponse } from 'next/server'; import { fetchAccurateAPI } from '@/services/accurate'; export async function GET() { const res = await fetchAccurateAPI('/warehouse/list.do?fields=id,name'); return NextResponse.json(res); }
