@@ -32,8 +32,8 @@ export async function POST(request: Request) {
         const branchAccurateId = parseInt((order.branches_cache as any).accurate_branch_id);
         const items = order.order_items.map((i: any) => ({
           accurate_item_id: (i.products_cache as any).accurate_item_id,
-          qty: i.quantity,
-          price: i.unit_price
+          qty: Number(i.quantity),
+          price: Number(i.unit_price)
         }));
 
         try {
