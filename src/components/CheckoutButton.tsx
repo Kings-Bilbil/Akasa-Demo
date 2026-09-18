@@ -42,11 +42,12 @@ export default function CheckoutButton({ product, branches, customerId }: { prod
     
     setLoading(true);
     try {
+      const orderId = uuidv4();
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          orderId: `ORD-${Date.now()}`,
+          orderId: orderId,
           total: product.price * quantity,
           customerId: customerId, 
           branchId: selectedBranch,
