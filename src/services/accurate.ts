@@ -13,17 +13,29 @@ const API_BASE_URL = 'https://zeus.accurate.id/accurate/api';
  * Mendapatkan timestamp dengan format dd/mm/yyyy hh:mm:ss
  */
 function getAccurateTimestamp(): string {
-  const now = new Date();
+  // Gunakan timezone Asia/Jakarta (WIB) agar tidak error saat deploy ke server luar negeri
+  const options: Intl.DateTimeFormatOptions = {
+    timeZone: 'Asia/Jakarta',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  };
   
-  const pad = (n: number) => n.toString().padStart(2, '0');
+  const formatter = new Intl.DateTimeFormat('id-ID', options);
+  const parts = formatter.formatToParts(new Date());
   
-  const dd = pad(now.getDate());
-  const mm = pad(now.getMonth() + 1);
-  const yyyy = now.getFullYear();
+  const getPart = (type: string) => parts.find(p => p.type === type)?.value || '00';
   
-  const hh = pad(now.getHours());
-  const mn = pad(now.getMinutes());
-  const ss = pad(now.getSeconds());
+  const dd = getPart('day');
+  const mm = getPart('month');
+  const yyyy = getPart('year');
+  const hh = getPart('hour');
+  const mn = getPart('minute');
+  const ss = getPart('second');
   
   return `${dd}/${mm}/${yyyy} ${hh}:${mn}:${ss}`;
 }
