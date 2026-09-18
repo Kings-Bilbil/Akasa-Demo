@@ -54,15 +54,17 @@ export async function POST(request: Request) {
         clientKey: process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || ''
     });
 
+    const origin = request.headers.get('origin') || "http://localhost:3000";
+    
     const parameter = {
       transaction_details: {
         order_id: orderId,
         gross_amount: Math.round(total)
       },
       credit_card: { secure: true },
-      // Memaksa Midtrans agar selalu pulang ke localhost, mengabaikan settingan Dashboard
+      // Mengarahkan kembali ke halaman dashboard setelah pembayaran selesai
       callbacks: {
-        finish: "http://localhost:3000"
+        finish: `${origin}/dashboard`
       }
     };
     
