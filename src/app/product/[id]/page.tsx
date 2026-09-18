@@ -36,8 +36,19 @@ export default async function ProductDetail({ params }: { params: Promise<{ id: 
   // 3. Ambil data cabang dari Supabase untuk daftar dropdown
   const { data: dbBranches } = await supabase.from('branches_cache').select('id, name');
   
-  // Siapkan cabang untuk tombol checkout
-  const checkoutBranches = dbBranches || [];
+  // Siapkan cabang untuk tombol checkout beserta informasi stok live-nya
+  const checkoutBranches = dbBranches?.map(dbBranch => {
+    let stock = undefined;
+    if (!accurateError) {
+      // Cari stok berdasarkan nama gudang yang sinkron dengan nama cabang
+      const stockItem = stockDetails.find((s: any) => s.name === dbBranch.name);
+      stock = stockItem ? stockItem.balance : 0;
+    }
+    return {
+      ...dbBranch,
+      stock
+    };
+  }) || [];
 
   return (
     <main className="min-h-screen bg-gray-50 py-12 px-6">

@@ -6,7 +6,7 @@ import Popup from '@/components/Popup';
 
 export default function CheckoutButton({ product, branches, customerId }: { product: any, branches: any[], customerId: string }) {
   const [loading, setLoading] = useState(false);
-  const [selectedBranch, setSelectedBranch] = useState(branches[0]?.id || '');
+  const [selectedBranch, setSelectedBranch] = useState(branches.find(b => b.stock === undefined || b.stock > 0)?.id || '');
   const [popupData, setPopupData] = useState<{message: string, type: 'success' | 'error'} | null>(null);
 
   useEffect(() => {
@@ -88,17 +88,22 @@ export default function CheckoutButton({ product, branches, customerId }: { prod
         value={selectedBranch}
         onChange={(e) => setSelectedBranch(e.target.value)}
       >
-        {branches.map(b => (
-          <option key={b.id} value={b.id}>{b.name}</option>
-        ))}
+        {branches.map(b => {
+          const isOutOfStock = b.stock !== undefined && b.stock <= 0;
+          return (
+            <option key={b.id} value={b.id} disabled={isOutOfStock}>
+              {b.name} {b.stock !== undefined ? `(Stok: ${b.stock})` : ''} {isOutOfStock ? '- KOSONG' : ''}
+            </option>
+          );
+        })}
       </select>
       
       <button 
         onClick={handleCheckout} 
-        disabled={loading}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-lg shadow-blue-200 disabled:opacity-50"
+        disabled={loading || !selectedBranch}
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-lg shadow-blue-200 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {loading ? 'Memproses...' : 'Beli Sekarang (Checkout)'}
+        {loading ? 'Memproses...' : !selectedBranch ? 'Stok Habis' : 'Beli Sekarang (Checkout)'}
       </button>
     </div>
   );
