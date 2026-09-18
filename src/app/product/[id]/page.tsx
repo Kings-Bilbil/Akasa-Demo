@@ -40,8 +40,11 @@ export default async function ProductDetail({ params }: { params: Promise<{ id: 
   const checkoutBranches = dbBranches?.map(dbBranch => {
     let stock = undefined;
     if (!accurateError) {
-      // Cari stok berdasarkan nama gudang yang sinkron dengan nama cabang
-      const stockItem = stockDetails.find((s: any) => s.name === dbBranch.name);
+      // Cari stok berdasarkan nama gudang (Fuzzy Match: Cabang Pontianak == Gudang Pontianak)
+      const cleanName = (name: string) => name.toLowerCase().replace('gudang', '').replace('cabang', '').trim();
+      const targetName = cleanName(dbBranch.name);
+      
+      const stockItem = stockDetails.find((s: any) => cleanName(s.name) === targetName);
       stock = stockItem ? stockItem.balance : 0;
     }
     return {
