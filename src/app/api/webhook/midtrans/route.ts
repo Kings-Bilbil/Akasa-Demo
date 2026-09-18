@@ -30,9 +30,31 @@ export async function POST(request: Request) {
         // Ambil "no" barang dari Accurate menggunakan ID (idealnya ini disimpan di cache juga)
         // Demi demo, kita anggap accurate_item_id sudah cukup (biasanya butuh item no)
         const branchAccurateId = parseInt((order.branches_cache as any).accurate_branch_id);
-        // ... Logika kirim SO
-        console.log("Membuat Sales Order di cabang:", branchAccurateId);
-        // await createSalesOrder(branchAccurateId, items);
+        const items = order.order_items.map((i: any) => ({
+          accurate_item_id: (i.products_cache as any).accurate_item_id,
+          qty: i.quantity,
+          price: i.unit_price
+        }));
+
+        try {
+          console.log("Membuat Sales Order di cabang:", branchAccurateId);
+          const soResult = await createSalesOrder(branchAccurateId, items);
+          if (soResult && soResult.r && soResult.r.id) {
+            await supabase.from('orders').update({ accurate_sales_order_id: soResult.r.id.toString() }).eq('id', orderId);
+            await supabase.from('sync_logs').insert({ related_order_id: orderId, action: 'CREATE_SALES_ORDER', status: 'success', message: 'SO berhasil dibuat di Accurate' });
+          } else {
+            throw new Error("Respon Accurate tidak mengembalikan ID SO");
+          }
+        } catch (e: any) {
+          const errStr = String(e.message || e).toLowerCase();
+          let userMsg = `Gagal sinkronisasi ke Accurate: ${e.message || e}`;
+          if (errStr.includes('fetch') || errStr.includes('network')) userMsg = 'Gagal menghubungi server Accurate.';
+          else if (errStr.includes('api') || errStr.includes('token') || errStr.includes('unauthorized')) userMsg = 'Koneksi ditolak oleh Accurate. Token kedaluwarsa.';
+          else if (errStr.includes('timeout')) userMsg = 'Server Accurate terlalu lama merespons.';
+          else if (errStr.includes('no_item') || errStr.includes('not found')) userMsg = 'Barang tidak ditemukan di Accurate.';
+          
+          await supabase.from('sync_logs').insert({ related_order_id: orderId, action: 'CREATE_SALES_ORDER', status: 'error', message: userMsg });
+        }
       }
       
       return NextResponse.json({ status: 'success' });

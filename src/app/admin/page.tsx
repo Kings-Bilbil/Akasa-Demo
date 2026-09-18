@@ -19,7 +19,7 @@ export default async function AdminOrdersPage() {
   const adminClient = createAdminClient();
   const { data: orders } = await adminClient
     .from('orders')
-    .select('*, customers(full_name, email), branches_cache(name)')
+    .select('*, customers(full_name, email), branches_cache(name), sync_logs(status, message, action)')
     .order('created_at', { ascending: false });
 
   return (
@@ -49,11 +49,28 @@ export default async function AdminOrdersPage() {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.branches_cache?.name}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                    order.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                  }`}>
-                    {order.status === 'paid' ? 'Lunas / Diproses' : 'Menunggu Pembayaran'}
-                  </span>
+                  <div className="flex flex-col gap-1 items-start">
+                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                      order.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {order.status === 'paid' ? 'Lunas / Diproses' : 'Menunggu Pembayaran'}
+                    </span>
+                    {order.status === 'paid' && !order.accurate_sales_order_id && order.sync_logs?.some((log: any) => log.status === 'error') && (
+                      <div className="mt-1 flex flex-col gap-1" title={order.sync_logs.find((log: any) => log.status === 'error')?.message}>
+                        <span className="px-2 inline-flex text-xs leading-5 font-bold rounded bg-red-100 text-red-800 border border-red-200">
+                          Gagal Kirim ke Accurate
+                        </span>
+                        <span className="text-[10px] text-red-600 max-w-[150px] whitespace-normal">
+                          {order.sync_logs.find((log: any) => log.status === 'error')?.message}
+                        </span>
+                      </div>
+                    )}
+                    {order.accurate_sales_order_id && (
+                      <span className="px-2 inline-flex text-xs leading-5 font-medium rounded bg-blue-50 text-blue-700 border border-blue-200">
+                        SO: {order.accurate_sales_order_id}
+                      </span>
+                    )}
+                  </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-bold">
                   Rp {order.total_amount.toLocaleString('id-ID')}
