@@ -1,135 +1,150 @@
-import { createClient } from '@/utils/supabase/server';
+﻿import { createClient } from '@/utils/supabase/server';
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
-import MidtransSuccessHandler from '@/components/MidtransSuccessHandler';
+import TemplateHeader from '@/components/TemplateHeader';
 
-export default async function Home({ searchParams }: { searchParams: Promise<{ transaction_status?: string, order_id?: string }> }) {
-  const { transaction_status, order_id } = await searchParams;
+export default async function Home() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (user?.email === 'admin@azuraya.com') {
-    redirect('/admin');
-  }
-  
-  // Ambil data produk dari Supabase cache
-  const { data: products, error } = await supabase
-    .from('products_cache')
-    .select('*')
-    .order('name');
-
-  // Ambil URL Google Maps dari pengaturan
-  const { data: gmapsData } = await supabase
-    .from('web_settings')
-    .select('value')
-    .eq('key', 'gmaps_iframe_url')
-    .single();
+  const { data: gmapsData } = await supabase.from('settings').select('value').eq('key', 'gmaps_iframe_url').single();
   const gmapsUrl = gmapsData?.value || "https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d1020084.7176140683!2d109.19199321307527!3d0.32924157053039146!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sid!4v1716382023912!5m2!1sen!2sid";
 
   return (
-    <main className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Blok penangkap Redirect Midtrans */}
-        {(transaction_status === 'settlement' || transaction_status === 'capture' || transaction_status === 'success') && order_id && (
-          <div className="bg-green-100 border border-green-400 text-green-700 px-6 py-4 rounded-lg mb-8 shadow-sm">
-            <h3 className="font-bold text-lg mb-2">🎉 Pembayaran Berhasil!</h3>
-            <p>Memproses pesanan Anda ke Accurate Online...</p>
-            
-            {/* Auto-trigger API sukses di client side */}
-            <MidtransSuccessHandler orderId={order_id} />
+    <>
+      <TemplateHeader />
+      <main>
+        {/* HERO SECTION */}
+        <section id="beranda" className="hero" style={{ paddingTop: '100px' }}>
+          <div className="hero__flash-container">
+            <div className="flash-light flash-light--left"></div>
+            <div className="flash-light flash-light--right"></div>
           </div>
-        )}
-
-        <header className="flex justify-between items-center mb-10">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Azuraya Vape Store</h1>
-            <p className="text-gray-600 mt-2">Katalog Produk Resmi terintegrasi dengan Accurate</p>
-          </div>
-          <div className="flex gap-4">
-            {user ? (
-              <>
-                {user.email !== 'admin@azuraya.com' && (
-                  <Link href="/dashboard" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition">
-                    Dashboard Saya
-                  </Link>
-                )}
-                {user.email === 'admin@azuraya.com' && (
-                  <Link href="/admin" className="bg-gray-900 hover:bg-black text-white px-4 py-2 rounded-lg font-medium transition">
-                    Admin Panel
-                  </Link>
-                )}
-                <form action="/api/auth/logout" method="POST">
-                  <button type="submit" className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 transition">
-                    Logout
-                  </button>
-                </form>
-              </>
-            ) : (
-              <>
-                <Link href="/login" className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 transition">
-                  Login
-                </Link>
-                <Link href="/register" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition">
-                  Daftar
-                </Link>
-              </>
-            )}
-          </div>
-        </header>
-
-        {error && (
-          <div className="bg-red-50 text-red-600 p-4 rounded-lg mb-8 border border-red-200">
-            Gagal memuat produk: {error.message}
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {products?.map((product) => (
-            <div key={product.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition cursor-pointer">
-              <div className="h-48 bg-gray-200 flex items-center justify-center">
-                {/* Placeholder Image */}
-                <span className="text-gray-400 text-5xl">💨</span>
+          <div className="hero__content">
+            <div className="hero__top">
+              <h1 className="hero__heading">
+                Vape Original dengan <span className="hero__heading--gold">Harga</span><br />
+                <span className="hero__heading--gold">Terbaik</span>
+              </h1>
+              <p className="hero__paragraph">
+                Toko vape terpercaya dengan produk berkualitas, program loyalitas, dan komunitas yang terus berkembang di seluruh Kalimantan Barat.
+              </p>
+              <Link href="/produk" className="hero__cta">Pesan Sekarang</Link>
+            </div>
+            <div className="hero__phones">
+              <div className="hero__phone hero__phone--left">
+                <img src="/images/mobile-ui-2.png" alt="Azuraya mobile app" />
+                <div className="hero__phone-gradient"></div>
               </div>
-              <div className="p-5">
-                <h3 className="font-semibold text-lg text-gray-900 line-clamp-2 min-h-[3.5rem]">
-                  {product.name}
-                </h3>
-                <p className="text-blue-600 font-bold mt-3 text-xl">
-                  Rp {product.price.toLocaleString('id-ID')}
-                </p>
-                <Link href={`/product/${product.id}`} className="w-full mt-4 block text-center bg-gray-900 text-white py-2 rounded-lg font-medium hover:bg-gray-800 transition">
-                  Lihat Detail & Stok
-                </Link>
+              <div className="hero__phone hero__phone--right">
+                <img src="/images/301_5672-removebg-preview.png" alt="Azuraya product detail" />
+                <div className="hero__phone-gradient"></div>
               </div>
             </div>
-          ))}
-          
-          {(!products || products.length === 0) && !error && (
-            <div className="col-span-full text-center py-20 text-gray-500">
-              <p className="text-xl">Belum ada produk.</p>
-              <p className="mt-2">Silakan klik tombol "Sync Data Accurate" di atas.</p>
+          </div>
+        </section>
+        
+        {/* ABOUT SECTION */}
+        <section id="tentang" className="about">
+          <div className="about__header">
+            <h2 className="about__title">Kenali Lebih Dekat Perjalanan <strong>Azuraya Grup</strong></h2>
+          </div>
+          <div className="about__cards">
+            <article className="about__card">
+              <div className="about__card-circle about__card-circle--bg"></div>
+              <div className="about__card-circle about__card-circle--img">
+                <img src="/images/awal-berdiri.png" alt="Awal berdiri Azuraya tahun 2016" />
+              </div>
+              <div className="about__card-content">
+                <span className="about__card-year">2016</span>
+                <h3 className="about__card-title">Awal Berdiri</h3>
+                <p className="about__card-desc">Azuraya Grup memulai perjalanan sebagai salah satu pelopor toko vape di Kalimantan Barat, dengan komitmen menyediakan produk berkualitas dan edukasi bagi perokok dewasa yang ingin beralih.</p>
+              </div>
+            </article>
+            <article className="about__card">
+              <div className="about__card-circle about__card-circle--bg"></div>
+              <div className="about__card-circle about__card-circle--img">
+                <img src="/images/ekspansi-cabang.png" alt="Ekspansi cabang Azuraya" />
+              </div>
+              <div className="about__card-content">
+                <span className="about__card-year">2018 - 2021</span>
+                <h3 className="about__card-title">Ekspansi Cabang</h3>
+                <p className="about__card-desc">Merespon tingginya antusiasme komunitas, kami mulai berekspansi secara agresif, membuka cabang di berbagai titik strategis di Pontianak dan kota-kota sekitarnya.</p>
+              </div>
+            </article>
+            <article className="about__card">
+              <div className="about__card-circle about__card-circle--bg"></div>
+              <div className="about__card-circle about__card-circle--img">
+                <img src="/images/market-leader.png" alt="Azuraya sebagai market leader" />
+              </div>
+              <div className="about__card-content">
+                <span className="about__card-year">2024 - Sekarang</span>
+                <h3 className="about__card-title">Market Leader</h3>
+                <p className="about__card-desc">Kini Azuraya Grup telah berkembang menjadi 23 cabang yang tersebar di seluruh Kalimantan Barat, mengukuhkan posisi sebagai pemimpin pasar retail vape terbesar di wilayah ini.</p>
+              </div>
+            </article>
+          </div>
+        </section>
+        
+        {/* PRODUCTS SECTION */}
+        <section id="produk" className="products">
+          <div className="flash-separator">
+            <div className="flash-light flash-light--left"></div>
+            <div className="flash-light flash-light--right"></div>
+          </div>
+          <div className="products__inner">
+            <div className="products__content">
+              <h2 className="products__title">
+                Temukan Liquid Favorit &amp;<br />
+                Jelajahi <span className="products__title--gold">Produk Azuraya</span>
+              </h2>
+              <Link href="/produk" className="btn-primary">Lihat Semua Produk &amp; Ketersediaan</Link>
             </div>
-          )}
-        </div>
-      </div>
-
-      <footer className="max-w-6xl mx-auto mt-20 pt-10 border-t border-gray-200">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Lokasi Cabang Kami</h2>
-        <div className="w-full h-96 bg-gray-200 rounded-xl overflow-hidden shadow-inner relative">
-          <iframe 
-            src={gmapsUrl} 
-            className="absolute left-0 w-full"
-            style={{ top: '-70px', height: 'calc(100% + 70px)', border: 0 }} 
-            allowFullScreen={false} 
-            loading="lazy" 
-            referrerPolicy="no-referrer-when-downgrade"
-            title="Lokasi Seluruh Cabang Azuraya"
-          ></iframe>
-        </div>
-        <p className="text-center text-gray-500 mt-8 pb-8 text-sm">
-          &copy; {new Date().getFullYear()} Azuraya B2B. Terintegrasi dengan Accurate Online.
-        </p>
-      </footer>
-    </main>
+            <div className="products__image">
+              <img src="/images/produk-gift-cards.png" alt="Produk vape Azuraya" />
+            </div>
+          </div>
+        </section>
+        
+        {/* BRANCH SECTION */}
+        <section id="cabang" className="branch">
+          <div className="flash-separator">
+            <div className="flash-light flash-light--left"></div>
+            <div className="flash-light flash-light--right"></div>
+          </div>
+          <div className="branch__inner">
+            <div className="branch__map" style={{position: 'relative', overflow: 'hidden'}}>
+              <iframe 
+                src={gmapsUrl} 
+                className="absolute inset-0 w-full h-full border-0 rounded-2xl"
+                allowFullScreen 
+                loading="lazy" 
+                referrerPolicy="no-referrer-when-downgrade"
+              ></iframe>
+            </div>
+            <div className="branch__info" style={{flex: 1}}>
+              <div className="branch__title-wrapper" style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
+                <h2 className="branch__title" style={{display: 'flex', justifyContent: 'space-between'}}>
+                  <span>Temukan</span>
+                  <span>Cabang</span>
+                </h2>
+                <h2 className="branch__title branch__title--gold">Azuraya Terdekat</h2>
+              </div>
+              <Link href="/cabang" className="btn-primary" style={{alignSelf: 'flex-end'}}>Lihat Informasi Cabang</Link>
+            </div>
+          </div>
+        </section>
+        
+        {/* FOOTER */}
+        <footer className="footer">
+          <div className="footer__inner">
+            <div className="footer__brand">
+              <h3 className="footer__brand-title">Azuraya</h3>
+              <p className="footer__brand-text">Toko vape terbesar dan terpercaya di Kalimantan Barat dengan 23 cabang yang siap melayani kebutuhan vaping Anda.</p>
+            </div>
+          </div>
+          <div className="footer__bottom">
+            <p>&copy; 2024 Azuraya Grup. Hak Cipta Dilindungi.</p>
+          </div>
+        </footer>
+      </main>
+    </>
   );
 }

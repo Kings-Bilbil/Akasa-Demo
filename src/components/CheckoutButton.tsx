@@ -1,5 +1,4 @@
-'use client';
-
+﻿'use client';
 import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import Popup from '@/components/Popup';
@@ -8,35 +7,19 @@ export default function CheckoutButton({ product, branches, customerId }: { prod
   const [loading, setLoading] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState(branches.find(b => b.stock === undefined || b.stock > 0)?.id || '');
   const [popupData, setPopupData] = useState<{message: string, type: 'success' | 'error'} | null>(null);
-
   const [quantity, setQuantity] = useState(1);
-  const selectedBranchObj = branches.find(b => b.id === selectedBranch);
-  const maxStock = selectedBranchObj?.stock !== undefined ? selectedBranchObj.stock : 999;
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  // Pastikan quantity tidak melebihi stok cabang yang dipilih
-  useEffect(() => {
-    if (quantity > maxStock && maxStock > 0) {
-      setQuantity(maxStock);
-    }
-  }, [selectedBranch, maxStock, quantity]);
+  const selectedBranchData = branches.find(b => b.id === selectedBranch);
+  const maxStock = selectedBranchData?.stock !== undefined ? selectedBranchData.stock : 999;
 
   useEffect(() => {
-    // Muat script Midtrans Snap
-    const snapScript = "https://app.sandbox.midtrans.com/snap/snap.js";
-    const clientKey = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || 'SB-Mid-client-xxxx'; // Harusnya dari env
-    
-    const script = document.createElement('script');
-    script.src = snapScript;
-    script.setAttribute('data-client-key', clientKey);
-    script.async = true;
-    document.body.appendChild(script);
-
-    return () => { document.body.removeChild(script); }
-  }, []);
+    setQuantity(1);
+  }, [selectedBranch]);
 
   const handleCheckout = async () => {
     if (!selectedBranch) {
-      setPopupData({ message: "Silakan pilih cabang pengambilan terlebih dahulu.", type: 'error' });
+      setPopupData({ message: 'Silakan pilih cabang terlebih dahulu.', type: 'error' });
       return;
     }
     
@@ -56,82 +39,95 @@ export default function CheckoutButton({ product, branches, customerId }: { prod
       });
       
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Terjadi kesalahan');
       
-      if (res.ok && data.token) {
-        (window as any).snap.pay(data.token, {
-          onSuccess: function() {
-            setPopupData({ message: "Pembayaran berhasil! Sistem sedang memproses pesanan Anda ke Accurate...", type: 'success' });
-            setTimeout(() => {
-              window.location.href = "/dashboard";
-            }, 3000);
-          },
-          onPending: function() {
-            setPopupData({ message: "Menunggu pembayaran Anda.", type: 'success' });
-          },
-          onError: function() {
-            setPopupData({ message: "Terjadi kesalahan saat memproses pembayaran.", type: 'error' });
-          },
-          onClose: function() {
-            setPopupData({ message: "Anda menutup jendela tanpa menyelesaikan pembayaran", type: 'error' });
-          }
-        });
-      } else {
-        setPopupData({ message: "Gagal membuat token: " + data.error, type: 'error' });
-      }
-    } catch (e: any) {
-      setPopupData({ message: "Error: " + e.message, type: 'error' });
+      window.snap.pay(data.token, {
+        onSuccess: function(result: any) {
+          setPopupData({ message: 'Pembayaran berhasil! Silakan ambil barang Anda di cabang yang dipilih.', type: 'success' });
+        },
+        onPending: function(result: any) {
+          setPopupData({ message: 'Menunggu pembayaran Anda.', type: 'success' });
+        },
+        onError: function(result: any) {
+          setPopupData({ message: 'Pembayaran gagal. Silakan coba lagi.', type: 'error' });
+        },
+        onClose: function() {
+          setLoading(false);
+        }
+      });
+    } catch (err: any) {
+      setPopupData({ message: err.message, type: 'error' });
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
-    <div className="mt-8 border-t pt-6">
-      {popupData && <Popup message={popupData.message} type={popupData.type} onClose={() => setPopupData(null)} />}
+    <>
+      <div className="product-detail__stock">
+        <label>Cek Stok per Cabang</label>
+        <div className="dropdown " id="branch-dropdown">
+          <div className="dropdown__header" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
+            <span id="selected-branch">{selectedBranchData ? ${selectedBranchData.name} -  : 'Pilih Cabang'}</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </div>
+          {isDropdownOpen && (
+            <div className="dropdown__list" style={{display: 'block'}}>
+              {branches.map(b => {
+                const isDisabled = b.stock !== undefined && b.stock <= 0;
+                return (
+                  <div 
+                    key={b.id} 
+                    className={"dropdown__item "}
+                    onClick={() => {
+                      if (!isDisabled) {
+                        setSelectedBranch(b.id);
+                        setIsDropdownOpen(false);
+                      }
+                    }}
+                  >
+                    {b.name} - {b.stock !== undefined ? b.stock + ' unit' : 'Tersedia'}
+                    {isDisabled && <span className="ml-2 text-red-500 text-xs">(Habis)</span>}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
       
-      <div className="mb-4">
-        <label className="block text-sm font-bold text-gray-700 mb-2">Jumlah Beli:</label>
-        <div className="flex items-center gap-3">
+      <div className="product-detail__add-to-cart-row mt-6">
+        <div className="quantity-selector">
           <button 
+            className="qty-btn qty-btn--minus" 
             onClick={() => setQuantity(Math.max(1, quantity - 1))}
-            className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-700 hover:bg-gray-200"
           >-</button>
-          <span className="text-lg font-bold w-12 text-center text-gray-900">{quantity}</span>
+          <span className="qty-value">{quantity}</span>
           <button 
+            className="qty-btn qty-btn--plus"
             onClick={() => setQuantity(Math.min(maxStock, quantity + 1))}
-            className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-700 hover:bg-gray-200 disabled:opacity-50"
             disabled={quantity >= maxStock}
           >+</button>
         </div>
+        <button 
+          onClick={handleCheckout}
+          disabled={loading || !selectedBranch || maxStock === 0}
+          className="btn-primary btn-cart w-full flex justify-center items-center gap-2"
+        >
+          {loading ? 'Memproses...' : 'Pesan Sekarang'}
+        </button>
       </div>
 
-      <label className="block text-sm font-bold text-gray-700 mb-2">Pilih Cabang Pengambilan:</label>
-      <select 
-        className="w-full mb-4 p-3 border rounded-lg text-gray-900 bg-gray-50 outline-none focus:ring-2 focus:ring-blue-500"
-        value={selectedBranch}
-        onChange={(e) => setSelectedBranch(e.target.value)}
-      >
-        {branches.map(b => {
-          const isOutOfStock = b.stock !== undefined && b.stock <= 0;
-          return (
-            <option key={b.id} value={b.id} disabled={isOutOfStock}>
-              {b.name} {b.stock !== undefined ? `(Stok: ${b.stock})` : ''} {isOutOfStock ? '- KOSONG' : ''}
-            </option>
-          );
-        })}
-      </select>
-      
-      <div className="flex justify-between items-center mb-4">
-        <span className="text-sm text-gray-500">Total Belanja:</span>
-        <span className="text-xl font-bold text-gray-900">Rp {(product.price * quantity).toLocaleString('id-ID')}</span>
-      </div>
-
-      <button 
-        onClick={handleCheckout} 
-        disabled={loading || !selectedBranch}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-lg shadow-blue-200 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {loading ? 'Memproses...' : !selectedBranch ? 'Stok Habis' : 'Beli Sekarang (Checkout)'}
+      <button className="btn-primary btn-summary mt-4 bg-gray-800 border-none" style={{backgroundColor: '#222', borderColor: '#222'}}>
+        {quantity} Produk<br />Rp {(product.price * quantity).toLocaleString('id-ID')}
       </button>
-    </div>
+
+      {popupData && (
+        <Popup 
+          message={popupData.message} 
+          type={popupData.type} 
+          onClose={() => setPopupData(null)} 
+        />
+      )}
+    </>
   );
 }

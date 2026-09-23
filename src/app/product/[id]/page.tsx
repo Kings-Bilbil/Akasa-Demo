@@ -1,14 +1,14 @@
-import { createClient } from '@/utils/supabase/server';
+﻿import { createClient } from '@/utils/supabase/server';
 import { fetchAccurateAPI } from '@/services/accurate';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import CheckoutButton from '@/components/CheckoutButton';
+import TemplateHeader from '@/components/TemplateHeader';
 
 export default async function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
   
-  // Cek user yang sedang login
   const { data: { user } } = await supabase.auth.getUser();
 
   if (user?.email === 'admin@azuraya.com') {
@@ -27,98 +27,81 @@ export default async function ProductDetail({ params }: { params: Promise<{ id: 
   let accurateError = null;
 
   try {
-    const accurateResponse = await fetchAccurateAPI(`/item/detail.do?no=${product.accurate_item_id}`);
+    const accurateResponse = await fetchAccurateAPI(/item/detail.do?no= + product.accurate_item_id);
     stockDetails = accurateResponse.d?.detailWarehouseData || [];
   } catch (err: any) {
-    accurateError = "Gagal mengambil stok live dari Accurate. Sistem sedang sibuk.";
+    accurateError = "Gagal mengambil stok live dari Accurate.";
   }
   
-  // 3. Ambil data cabang dari Supabase untuk daftar dropdown
   const { data: dbBranches } = await supabase.from('branches_cache').select('id, name');
   
-  // Siapkan cabang untuk tombol checkout beserta informasi stok live-nya
   const checkoutBranches = dbBranches?.map(dbBranch => {
     let stock = undefined;
     if (!accurateError) {
-      // Cari stok berdasarkan nama gudang (Fuzzy Match: Cabang Pontianak == Gudang Pontianak)
       const cleanName = (name: string) => name.toLowerCase().replace('gudang', '').replace('cabang', '').trim();
       const targetName = cleanName(dbBranch.name);
-      
       const stockItem = stockDetails.find((s: any) => cleanName(s.name) === targetName);
       stock = stockItem ? stockItem.balance : 0;
     }
-    return {
-      ...dbBranch,
-      stock
-    };
+    return { ...dbBranch, stock };
   }) || [];
 
   return (
-    <main className="min-h-screen bg-gray-50 py-12 px-6">
-      <div className="max-w-4xl mx-auto">
-        <Link href="/" className="text-blue-600 hover:underline mb-6 inline-block">
-          &larr; Kembali ke Katalog
-        </Link>
-        
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col md:flex-row">
-          <div className="md:w-1/2 bg-gray-200 min-h-[300px] flex items-center justify-center">
-             <span className="text-gray-400 text-8xl">💨</span>
-          </div>
-          
-          <div className="p-8 md:w-1/2 flex flex-col justify-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
-            <p className="text-2xl font-bold text-blue-600 mb-8">
-              Rp {product.price.toLocaleString('id-ID')}
-            </p>
-            
-            <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
-              <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
-                <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-                </span>
-                Ketersediaan Stok Live
-              </h2>
-              
-              {accurateError ? (
-                <p className="text-red-500 text-sm">{accurateError}</p>
-              ) : stockDetails.length > 0 ? (
-                <ul className="space-y-3">
-                  {stockDetails.map((stock: any, index: number) => (
-                    <li key={index} className="flex justify-between items-center bg-white p-3 rounded border border-gray-100 shadow-sm">
-                      <span className="font-medium text-gray-700">
-                        {stock.name || 'Gudang Pusat'}
-                      </span>
-                      <span className={`px-3 py-1 rounded-full text-sm font-bold ${stock.balance > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                        {stock.balance} Pcs
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-gray-500 text-sm italic">Stok kosong di semua cabang.</p>
-              )}
-            </div>
+    <>
+      <TemplateHeader />
+      <main className="product-detail pt-24 min-h-screen">
+        <div className="flex justify-between items-center px-6 py-4 bg-black border-b border-gray-800">
+          <h1 className="text-xl font-bold text-white">Detail <span className="text-yellow-500">Produk</span></h1>
+          <Link href="/produk" className="text-white hover:text-yellow-500">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </Link>
+        </div>
 
+        <div className="product-detail__inner">
+          <div className="product-detail__gallery">
+            <div className="product-detail__main-image">
+              <img src={product.image_url || "/images/product-foom-tangy.png"} alt={product.name} />
+            </div>
+          </div>
+
+          <div className="product-detail__info">
+            <div className="product-detail__header-row">
+              <h1 className="product-detail__title">{product.name}</h1>
+            </div>
+            
+            <p className="product-detail__subtitle">Tersedia di {checkoutBranches.length} cabang</p>
+            
+            <div className="product-detail__pricing">
+              <span className="price-current">Rp {product.price.toLocaleString('id-ID')}</span>
+            </div>
+            
+            <hr className="product-detail__divider" />
+            
             {user ? (
-               user.email === 'admin@azuraya.com' ? (
-                 <div className="mt-8 border-t pt-6 text-center">
-                   <p className="mb-4 text-red-600 font-bold bg-red-50 p-4 rounded-lg">Admin tidak dapat melakukan pembelian.</p>
-                 </div>
-               ) : (
-                 <CheckoutButton product={product} branches={checkoutBranches} customerId={user.id} />
-               )
+               <CheckoutButton product={product} branches={checkoutBranches} customerId={user.id} />
             ) : (
-               <div className="mt-8 border-t pt-6 text-center">
-                 <p className="mb-4 text-gray-600">Anda harus login untuk melakukan pesanan.</p>
-                 <Link href="/login" className="bg-blue-600 text-white px-6 py-2 rounded-lg block w-full text-center hover:bg-blue-700 transition">Login Sekarang</Link>
-                 <Link href="/register" className="text-blue-600 text-sm block mt-3 hover:underline">Belum punya akun? Daftar</Link>
+               <div className="mt-8 pt-6 text-center">
+                 <p className="mb-4 text-gray-400">Anda harus login untuk melakukan pesanan.</p>
+                 <Link href="/login" className="btn-primary w-full text-center hover:bg-yellow-600 transition" style={{display: 'block'}}>Login Sekarang</Link>
+                 <Link href="/register" className="text-yellow-500 text-sm block mt-3 hover:underline">Belum punya akun? Daftar</Link>
                </div>
             )}
             
+            <div className="product-detail__delivery-info mt-8">
+              <div className="delivery-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+              </div>
+              <div className="delivery-text">
+                <h4>Ambil di Toko</h4>
+                <p>Produk diambil langsung di cabang pilihan, tidak ada pengiriman</p>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </>
   );
 }
