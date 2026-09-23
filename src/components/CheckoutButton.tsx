@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import Popup from '@/components/Popup';
@@ -65,9 +65,9 @@ export default function CheckoutButton({ product, branches, customerId }: { prod
     <>
       <div className="product-detail__stock">
         <label>Cek Stok per Cabang</label>
-        <div className="dropdown " id="branch-dropdown">
+        <div className={`dropdown ${isDropdownOpen ? 'active' : ''}`} id="branch-dropdown">
           <div className="dropdown__header" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
-            <span id="selected-branch">{selectedBranchData ? ${selectedBranchData.name} -  : 'Pilih Cabang'}</span>
+            <span id="selected-branch">{selectedBranchData ? `${selectedBranchData.name} - ${selectedBranchData.stock !== undefined ? selectedBranchData.stock + ' unit' : 'Tersedia'}` : 'Pilih Cabang'}</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
           </div>
           {isDropdownOpen && (
@@ -77,7 +77,7 @@ export default function CheckoutButton({ product, branches, customerId }: { prod
                 return (
                   <div 
                     key={b.id} 
-                    className={"dropdown__item "}
+                    className={`dropdown__item ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-800'}`}
                     onClick={() => {
                       if (!isDisabled) {
                         setSelectedBranch(b.id);

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/utils/supabase/client';
@@ -45,7 +45,7 @@ export default function CabangPage() {
             
             <div className="store-locator__list p-4 flex flex-col gap-4">
               <div 
-                className={"p-4 rounded-xl cursor-pointer transition border "}
+                className={`p-4 rounded-xl cursor-pointer transition border ${!selectedBranch ? 'border-yellow-500 bg-[#1a1a1a]' : 'border-gray-800 bg-black hover:bg-[#1a1a1a]'}`}
                 onClick={() => setSelectedBranch(null)}
               >
                 <h4 className="text-yellow-500 font-bold text-lg">Semua Cabang (Kalimantan Barat)</h4>
@@ -55,7 +55,7 @@ export default function CabangPage() {
               {branches.map(branch => (
                 <div 
                   key={branch.id} 
-                  className={"p-4 rounded-xl cursor-pointer transition border "}
+                  className={`p-4 rounded-xl cursor-pointer transition border ${selectedBranch?.id === branch.id ? 'border-yellow-500 bg-[#1a1a1a]' : 'border-gray-800 bg-black hover:bg-[#1a1a1a]'}`}
                   onClick={() => setSelectedBranch(branch)}
                 >
                   <div className="store-locator__item-info">

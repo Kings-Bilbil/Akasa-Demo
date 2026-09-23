@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/utils/supabase/client';
@@ -72,7 +72,7 @@ export default function TemplateHeader() {
           <span></span>
         </button>
   
-        <div className={"header__mobile-menu "} role="navigation" aria-label="Mobile navigation">
+        <div className={`header__mobile-menu ${isMenuOpen ? 'is-open' : ''}`} role="navigation" aria-label="Mobile navigation">
           <Link href="/#beranda" className="header__nav-link" onClick={() => setIsMenuOpen(false)}>Beranda</Link>
           <Link href="/#tentang" className="header__nav-link" onClick={() => setIsMenuOpen(false)}>Tentang Kami</Link>
           <Link href="/#produk" className="header__nav-link" onClick={() => setIsMenuOpen(false)}>Produk</Link>

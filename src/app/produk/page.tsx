@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/utils/supabase/client';
@@ -35,7 +35,7 @@ export default function ProdukPage() {
         <div className="products-page__content px-6 py-8">
           <div className="products-page__grid grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {products.map(product => (
-              <Link href={"/product/"} key={product.id} className="product-card">
+              <Link href={`/product/${product.id}`} key={product.id} className="product-card">
                 <div className="product-card__image">
                   {/* Handle image from accurate if exists */}
                   <img src={product.image_url || "/images/product-1.png"} alt={product.name} />

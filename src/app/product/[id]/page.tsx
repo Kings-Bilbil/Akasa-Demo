@@ -1,4 +1,4 @@
-﻿import { createClient } from '@/utils/supabase/server';
+import { createClient } from '@/utils/supabase/server';
 import { fetchAccurateAPI } from '@/services/accurate';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
@@ -27,7 +27,7 @@ export default async function ProductDetail({ params }: { params: Promise<{ id: 
   let accurateError = null;
 
   try {
-    const accurateResponse = await fetchAccurateAPI(/item/detail.do?no= + product.accurate_item_id);
+    const accurateResponse = await fetchAccurateAPI('/item/detail.do?no=' + product.accurate_item_id);
     stockDetails = accurateResponse.d?.detailWarehouseData || [];
   } catch (err: any) {
     accurateError = "Gagal mengambil stok live dari Accurate.";
