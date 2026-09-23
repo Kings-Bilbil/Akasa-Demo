@@ -3,6 +3,12 @@ import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import Popup from '@/components/Popup';
 
+declare global {
+  interface Window {
+    snap: any;
+  }
+}
+
 export default function CheckoutButton({ product, branches, customerId }: { product: any, branches: any[], customerId: string }) {
   const [loading, setLoading] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState(branches.find(b => b.stock === undefined || b.stock > 0)?.id || '');
