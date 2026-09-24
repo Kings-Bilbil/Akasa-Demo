@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import TemplateHeader from '@/components/TemplateHeader';
 
 export default function CabangPage() {
