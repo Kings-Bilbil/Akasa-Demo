@@ -1,4 +1,6 @@
+const fs = require('fs');
 
+const headerContent = `
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -95,3 +97,6 @@ export default function TemplateHeader() {
     </header>
   );
 }
+`;
+
+fs.writeFileSync('src/components/TemplateHeader.tsx', headerContent);

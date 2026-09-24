@@ -1,0 +1,1 @@
+const fs = require('fs'); let html = fs.readFileSync('temp-main.html', 'utf8'); html = html.replace(/class=/g, 'className=').replace(/<!--([\s\S]*?)-->/g, '{/*  */}').replace(/<img([^>]*[^/])>/g, '<img />').replace(/<br>/g, '<br />').replace(/<hr>/g, '<hr />').replace(/<input([^>]*[^/])>/g, '<input />').replace(/style="([^"]*)"/g, ''); fs.writeFileSync('temp-main.jsx', html);

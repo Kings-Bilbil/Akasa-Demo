@@ -6,35 +6,23 @@ export default function CabangPage() {
       <TemplateHeader />
       <main className="store-locator-page bg-black text-white min-h-screen pt-20">
         
-    <div className="store-locator__header">
-      <h1 className="store-locator__title">Cari <span>Cabang Azuraya</span></h1>
-      <a href="index.html" className="store-locator__close" aria-label="Tutup">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <div className="store-locator__header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '24px', marginBottom: '24px' }}>
+      <h2 style={{ fontSize: '24px', margin: 0 }}>Cari <span style={{ color: '#F5C518' }}>Cabang Azuraya</span></h2>
+      <Link href="/#cabang" className="store-locator__close">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F5C518" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <line x1="18" y1="6" x2="6" y2="18"></line>
           <line x1="6" y1="6" x2="18" y2="18"></line>
         </svg>
-      </a>
+      </Link>
     </div>
     
     <div className="store-locator__content">
       {/*  Left Panel  */}
       <div className="store-locator__sidebar">
-        <div className="store-locator__search">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" >
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-          <input type="text" className="store-locator__search-input" value="Azuraya" aria-label="Cari cabang" />
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" >
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-            <circle cx="12" cy="10" r="3"></circle>
-          </svg>
-        </div>
-        
         <div className="store-locator__list">
           {/*  Item 1  */}
           <div className="store-locator__item">
-            <div className="store-locator__checkbox"></div>
+            
             <div className="store-locator__item-info">
               <div className="store-locator__item-header">
                 <h4>Azuraya Vapor Store Tanjung Raya</h4>
@@ -54,7 +42,7 @@ export default function CabangPage() {
           
           {/*  Item 2  */}
           <div className="store-locator__item">
-            <div className="store-locator__checkbox"></div>
+            
             <div className="store-locator__item-info">
               <div className="store-locator__item-header">
                 <h4>Azuraya Vapor Store Serdam</h4>
@@ -74,7 +62,7 @@ export default function CabangPage() {
           
           {/*  Item 3  */}
           <div className="store-locator__item">
-            <div className="store-locator__checkbox"></div>
+            
             <div className="store-locator__item-info">
               <div className="store-locator__item-header">
                 <h4>Azuraya Vapor Store Untan</h4>
@@ -94,7 +82,7 @@ export default function CabangPage() {
           
           {/*  Item 4  */}
           <div className="store-locator__item">
-            <div className="store-locator__checkbox"></div>
+            
             <div className="store-locator__item-info">
               <div className="store-locator__item-header">
                 <h4>Azuraya Vapor Store Ampera</h4>
