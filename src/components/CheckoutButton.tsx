@@ -3,12 +3,6 @@ import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import Popup from '@/components/Popup';
 
-declare global {
-  interface Window {
-    snap: any;
-  }
-}
-
 export default function CheckoutButton({ product, branches, customerId }: { product: any, branches: any[], customerId: string }) {
   const [loading, setLoading] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState(branches.find(b => b.stock === undefined || b.stock > 0)?.id || '');
@@ -47,7 +41,7 @@ export default function CheckoutButton({ product, branches, customerId }: { prod
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Terjadi kesalahan');
       
-      window.snap.pay(data.token, {
+      (window as any).snap.pay(data.token, {
         onSuccess: function(result: any) {
           setPopupData({ message: 'Pembayaran berhasil! Silakan ambil barang Anda di cabang yang dipilih.', type: 'success' });
         },
@@ -71,9 +65,9 @@ export default function CheckoutButton({ product, branches, customerId }: { prod
     <>
       <div className="product-detail__stock">
         <label>Cek Stok per Cabang</label>
-        <div className={`dropdown ${isDropdownOpen ? 'active' : ''}`} id="branch-dropdown">
+        <div className="dropdown " id="branch-dropdown">
           <div className="dropdown__header" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
-            <span id="selected-branch">{selectedBranchData ? `${selectedBranchData.name} - ${selectedBranchData.stock !== undefined ? selectedBranchData.stock + ' unit' : 'Tersedia'}` : 'Pilih Cabang'}</span>
+            <span id="selected-branch">{selectedBranchData ? `${selectedBranchData.name}` : 'Pilih Cabang'}</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
           </div>
           {isDropdownOpen && (
@@ -83,7 +77,7 @@ export default function CheckoutButton({ product, branches, customerId }: { prod
                 return (
                   <div 
                     key={b.id} 
-                    className={`dropdown__item ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-800'}`}
+                    className={"dropdown__item "}
                     onClick={() => {
                       if (!isDisabled) {
                         setSelectedBranch(b.id);
