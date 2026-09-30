@@ -20,7 +20,7 @@ export default function TestimonialCarousel({ children, direction = "left", spee
   // Fungsi untuk infinite loop manual scroll
   const handleInfiniteScroll = useCallback(() => {
     if (!carouselRef.current) return;
-    const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
+    const { scrollLeft, scrollWidth } = carouselRef.current;
     
     // Asumsi: anak-anak (children) sudah diduplikasi sehingga scrollWidth = 2x lebar asli
     const halfWidth = scrollWidth / 2;
@@ -32,29 +32,29 @@ export default function TestimonialCarousel({ children, direction = "left", spee
     }
   }, []);
 
-  const animate = useCallback(() => {
-    if (!carouselRef.current || isDragging || isHovered.current) {
-      requestRef.current = requestAnimationFrame(animate);
-      return;
-    }
-
-    if (direction === "left") {
-      carouselRef.current.scrollLeft += speed;
-    } else {
-      carouselRef.current.scrollLeft -= speed;
-    }
-    
-    handleInfiniteScroll();
-    
-    requestRef.current = requestAnimationFrame(animate);
-  }, [direction, isDragging, speed, handleInfiniteScroll]);
-
   useEffect(() => {
+    const animate = () => {
+      if (!carouselRef.current || isDragging || isHovered.current) {
+        requestRef.current = requestAnimationFrame(animate);
+        return;
+      }
+
+      if (direction === "left") {
+        carouselRef.current.scrollLeft += speed;
+      } else {
+        carouselRef.current.scrollLeft -= speed;
+      }
+      
+      handleInfiniteScroll();
+      
+      requestRef.current = requestAnimationFrame(animate);
+    };
+
     requestRef.current = requestAnimationFrame(animate);
     return () => {
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
     };
-  }, [animate]);
+  }, [direction, isDragging, speed, handleInfiniteScroll]);
 
   // Drag handlers (Mouse)
   const onMouseDown = (e: React.MouseEvent) => {
