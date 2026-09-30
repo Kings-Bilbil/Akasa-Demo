@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server';
 import Link from 'next/link';
 import TemplateHeader from '@/components/TemplateHeader';
+import TestimonialCarousel from '@/components/TestimonialCarousel';
 
 export default async function Home() {
   const supabase = await createClient();
@@ -184,7 +185,7 @@ export default async function Home() {
 
       <div className="testimonials__container">
         {/*  Row 1  */}
-        <div className="testimonials__carousel"><div className="testimonials__row">
+        <TestimonialCarousel direction="left" speed={1}>
           {/*  First Set  */}
           <div className="testimonial-card">
             <p className="testimonial-card__quote">"pelayanan ramah, pkokny bagus lah tidak mengecewak..."</p>
@@ -283,9 +284,9 @@ export default async function Home() {
               </div>
             </div>
           </div>
-        </div></div>
+        </TestimonialCarousel>
         {/*  Row 2  */}
-        <div className="testimonials__carousel testimonials__carousel--reverse"><div className="testimonials__row">
+        <TestimonialCarousel direction="right" speed={1}>
           {/*  First Set  */}
           <div className="testimonial-card">
             <p className="testimonial-card__quote">"Emang mantab dah di azuraya nih, pelayanan bagos, ..."</p>
@@ -360,7 +361,7 @@ export default async function Home() {
               </div>
             </div>
           </div>
-        </div></div>
+        </TestimonialCarousel>
       </div>
     </section>
 
