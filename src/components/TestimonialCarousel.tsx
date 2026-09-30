@@ -15,7 +15,6 @@ export default function TestimonialCarousel({ children, direction = "left", spee
   const [scrollLeft, setScrollLeft] = useState(0);
   
   const requestRef = useRef<number>(0);
-  const isHovered = useRef(false);
 
   // Fungsi untuk infinite loop manual scroll
   const handleInfiniteScroll = useCallback(() => {
@@ -34,7 +33,7 @@ export default function TestimonialCarousel({ children, direction = "left", spee
 
   useEffect(() => {
     const animate = () => {
-      if (!carouselRef.current || isDragging || isHovered.current) {
+      if (!carouselRef.current || isDragging) {
         requestRef.current = requestAnimationFrame(animate);
         return;
       }
@@ -65,11 +64,6 @@ export default function TestimonialCarousel({ children, direction = "left", spee
 
   const onMouseLeave = () => {
     setIsDragging(false);
-    isHovered.current = false;
-  };
-
-  const onMouseEnter = () => {
-    isHovered.current = true; // Auto scroll pause on hover
   };
 
   const onMouseUp = () => {
@@ -136,7 +130,6 @@ export default function TestimonialCarousel({ children, direction = "left", spee
       className={`testimonials__carousel ${direction === 'right' ? 'testimonials__carousel--reverse' : ''}`}
       onMouseDown={onMouseDown}
       onMouseLeave={onMouseLeave}
-      onMouseEnter={onMouseEnter}
       onMouseUp={onMouseUp}
       onMouseMove={onMouseMove}
       onTouchStart={onTouchStart}
