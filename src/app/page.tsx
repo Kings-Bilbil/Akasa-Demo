@@ -142,10 +142,10 @@ export default async function Home() {
         <div className="flash-light flash-light--right"/>
       </div>
       <div className="branch__inner">
-        <div className="branch__map">
+        <div className="branch__map" style={{ position: 'relative' }}>
           <iframe 
               src={gmapsUrl} 
-              style={{ width: "100%", height: "100%", border: 0, borderRadius: "24px" }}
+              style={{ position: 'absolute', top: '-65px', left: 0, width: "100%", height: "calc(100% + 65px)", border: 0 }}
               allowFullScreen 
               loading="lazy" 
               referrerPolicy="no-referrer-when-downgrade"
