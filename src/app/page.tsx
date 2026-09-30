@@ -153,15 +153,15 @@ export default async function Home() {
         </div>
         <div className="branch__info">
           <div className="branch__title-wrapper">
-            <h2 className="branch__title">
+            <h2 className="branch__title branch__title-flex">
               <span>Temukan</span>
               <span>Cabang</span>
             </h2>
-            <h2 className="branch__title branch__title--gold">
+            <h2 className="branch__title branch__title--gold" style={{ textAlign: 'left' }}>
               Azuraya Terdekat
             </h2>
           </div>
-          <a href="cabang.html" className="btn-primary">
+          <a href="/cabang" className="btn-primary" style={{ alignSelf: 'flex-end' }}>
             Lihat Informasi Cabang
           </a>
         </div>
