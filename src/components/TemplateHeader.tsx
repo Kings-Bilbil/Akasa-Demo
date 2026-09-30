@@ -7,7 +7,16 @@ import { createClient } from '@/utils/supabase/client';
 export default function TemplateHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [isScrolled, setIsScrolled] = useState(false);
   
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(({ data }) => {
@@ -20,7 +29,7 @@ export default function TemplateHeader() {
   }, []);
 
   return (
-    <header className="header">
+    <header className={`header ${isScrolled ? 'header--scrolled' : ''}`}>
       <div className="header__inner">
         <nav className="header__nav" role="navigation" aria-label="Main navigation">
           <Link href="/#beranda" className="header__nav-link">Beranda</Link>
