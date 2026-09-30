@@ -14,7 +14,7 @@ export default function TestimonialCarousel({ children, direction = "left", spee
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
   
-  const requestRef = useRef<number>();
+  const requestRef = useRef<number>(0);
   const isHovered = useRef(false);
 
   // Fungsi untuk infinite loop manual scroll
