@@ -122,7 +122,7 @@ export default function CheckoutButton({ product, branches, customerId }: { prod
         </button>
       </div>
 
-      <button className="btn-primary btn-summary w-full mt-4 flex flex-col justify-center items-center" style={{backgroundColor: 'var(--color-gold)', color: '#000', borderRadius: '100px', height: '64px', border: 'none', fontWeight: '700', fontSize: '14px', lineHeight: '1.2'}}>
+      <button onClick={handleCheckout} disabled={loading || !selectedBranch || maxStock === 0} className="btn-primary btn-summary w-full mt-4 flex flex-col justify-center items-center cursor-pointer disabled:opacity-50" style={{backgroundColor: 'var(--color-gold)', color: '#000', borderRadius: '100px', height: '64px', border: 'none', fontWeight: '700', fontSize: '14px', lineHeight: '1.2'}}>
         <span>{quantity} Produk</span>
         <span>Rp {(product.price * quantity).toLocaleString('id-ID')}</span>
       </button>
@@ -137,3 +137,4 @@ export default function CheckoutButton({ product, branches, customerId }: { prod
     </>
   );
 }
+
