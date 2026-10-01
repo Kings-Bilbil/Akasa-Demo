@@ -24,7 +24,7 @@ export default async function CabangPage() {
   return (
     <>
       <TemplateHeader />
-      <main className="store-locator-page bg-black text-white min-h-screen pt-[140px] px-8 md:px-16">
+      <main className="store-locator-page bg-black text-white min-h-screen px-8 md:px-16" style={{ paddingTop: '160px' }}>
         <div className="store-locator__header flex justify-between items-center border-b border-gray-800 pb-6 mb-8">
           <h2 className="text-2xl font-bold m-0">Cari <span className="text-yellow-500">Cabang Azuraya</span></h2>
           <Link href="/" className="store-locator__close transition-opacity hover:opacity-80">
@@ -40,3 +40,4 @@ export default async function CabangPage() {
     </>
   );
 }
+
