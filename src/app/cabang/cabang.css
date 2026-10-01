@@ -1,4 +1,4 @@
-       STORE LOCATOR (CABANG) SECTION
+    /* STORE LOCATOR (CABANG) SECTION
        ============================================ */
     .store-locator {
       padding: 40px 60px;
@@ -350,4 +350,4 @@
 
     ul {
       list-style: none;
-    }
+    }
