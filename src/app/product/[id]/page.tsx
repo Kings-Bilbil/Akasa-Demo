@@ -23,6 +23,10 @@ export default async function ProductDetail({ params }: { params: Promise<{ id: 
     .single();
 
   if (error || !product) return notFound();
+  
+  const images = product.image_url ? product.image_url.split(',') : [];
+  const mainImage = images[0] || "/images/product-foom-tangy.png";
+  const thumb2 = images[1] || "/images/product-foom-tangy-2.png";
 
   let stockDetails: any[] = [];
   let accurateError = null;
@@ -64,17 +68,17 @@ export default async function ProductDetail({ params }: { params: Promise<{ id: 
           {/* Left Column: Images */}
           <div className="product-detail__gallery">
             <div className="product-detail__main-image">
-              <img src={product.image_url || "/images/product-foom-tangy.png"} alt={product.name} />
+              <img src={mainImage} alt={product.name} />
             </div>
             <div className="product-detail__thumbnails">
               <button className="gallery-nav gallery-nav--prev" aria-label="Previous image">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
               </button>
               <div className="thumbnail active">
-                <img src={product.image_url || "/images/product-foom-tangy.png"} alt="Thumbnail 1" />
+                <img src={mainImage} alt="Thumbnail 1" />
               </div>
               <div className="thumbnail">
-                <img src="/images/product-foom-tangy-2.png" alt="Thumbnail 2" />
+                <img src={thumb2} alt="Thumbnail 2" />
               </div>
               <button className="gallery-nav gallery-nav--next" aria-label="Next image">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
@@ -137,6 +141,9 @@ export default async function ProductDetail({ params }: { params: Promise<{ id: 
     </>
   );
 }
+
+
+
 
 
 

@@ -5,6 +5,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="p-6 text-2xl font-bold border-b border-gray-800">Admin Panel</div>
         <nav className="flex-1 p-4 space-y-2">
           <a href="/admin" className="block px-4 py-2 rounded hover:bg-gray-700">Daftar Pesanan</a>
+          <a href="/admin/products" className="block px-4 py-2 rounded hover:bg-gray-700">Pengaturan Produk</a>
           <a href="/admin/sync" className="block px-4 py-2 rounded hover:bg-gray-700">Sync Data Accurate</a>
           <a href="/admin/settings" className="block px-4 py-2 rounded hover:bg-gray-700">Pengaturan Web</a>
           <div className="pt-8 mt-8 border-t border-gray-800">
