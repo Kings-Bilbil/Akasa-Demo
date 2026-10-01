@@ -134,11 +134,13 @@ export default function CabangClient({ branches, branchMaps }: { branches: any[]
           )}
         </div>
         {selectedBranch ? (
-          <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedBranch.name + " " + (selectedBranch.address || ""))}`} target="_blank" rel="noopener noreferrer" className="w-full bg-[#F5C518] text-black font-bold py-5 rounded-full text-xl hover:bg-yellow-400 transition-colors flex items-center justify-center shadow-lg">Pilih Cabang ini</a>
+          <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedBranch.name + " " + (selectedBranch.address || ""))}`} target="_blank" rel="noopener noreferrer" className="w-full bg-[#F5C518] text-black font-semibold py-4 rounded-full text-lg hover:bg-yellow-400 transition-colors flex items-center justify-center shadow-lg" style={{ color: "#000000" }}>Pilih Cabang ini</a>
         ) : (
-          <button className="w-full bg-gray-700 text-gray-500 font-bold py-5 rounded-full text-xl cursor-not-allowed flex items-center justify-center">Pilih Cabang ini</button>
+          <button className="w-full bg-[#F5C518] text-black font-semibold py-4 rounded-full text-lg opacity-70 cursor-not-allowed flex items-center justify-center shadow-lg" style={{ color: "#000000" }}>Pilih Cabang ini</button>
         )}
       </div>
     </div>
   );
 }
+
+
