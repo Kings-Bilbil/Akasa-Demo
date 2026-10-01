@@ -34,7 +34,7 @@ export default async function Home() {
             Toko vape terpercaya dengan produk berkualitas, program loyalitas, dan komunitas yang terus berkembang di seluruh Kalimantan Barat.
           </p>
 
-          <a href="#" className="hero__cta">Pesan Sekarang</a>
+          <a href="#produk" className="hero__cta">Pesan Sekarang</a>
         </div>
 
         {/*  Phone mockups  */}

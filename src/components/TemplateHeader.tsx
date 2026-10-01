@@ -2,12 +2,14 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 
 export default function TemplateHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [isScrolled, setIsScrolled] = useState(false);
+  const pathname = usePathname();
   
   useEffect(() => {
     const handleScroll = () => {
@@ -28,19 +30,38 @@ export default function TemplateHeader() {
     });
   }, []);
 
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, hash: string) => {
+    if (pathname === '/') {
+      e.preventDefault();
+      const element = document.querySelector(hash);
+      if (element) {
+        // Adjust for fixed header offset
+        const headerOffset = 116;
+        const elementPosition = element.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+  
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: "smooth"
+        });
+      }
+      setIsMenuOpen(false);
+    }
+  };
+
   return (
     <header className={`header ${isScrolled ? 'header--scrolled' : ''}`}>
       <div className="header__inner">
         <nav className="header__nav" role="navigation" aria-label="Main navigation">
-          <Link href="/#beranda" className="header__nav-link">Beranda</Link>
-          <Link href="/#tentang" className="header__nav-link">Tentang Kami</Link>
-          <Link href="/#produk" className="header__nav-link">Produk</Link>
-          <Link href="/#cabang" className="header__nav-link">Cabang</Link>
-          <Link href="/#faq" className="header__nav-link">FAQ</Link>
+          <Link href="/#beranda" onClick={(e) => handleNavClick(e, '#beranda')} className="header__nav-link">Beranda</Link>
+          <Link href="/#tentang" onClick={(e) => handleNavClick(e, '#tentang')} className="header__nav-link">Tentang Kami</Link>
+          <Link href="/#produk" onClick={(e) => handleNavClick(e, '#produk')} className="header__nav-link">Produk</Link>
+          <Link href="/#cabang" onClick={(e) => handleNavClick(e, '#cabang')} className="header__nav-link">Cabang</Link>
+          <Link href="/#faq" onClick={(e) => handleNavClick(e, '#faq')} className="header__nav-link">FAQ</Link>
         </nav>
   
         <div className="header__logo">
-          <Link href="/">
+          <Link href="/" onClick={(e) => handleNavClick(e, '#beranda')}>
             <img src="/images/logo.png" alt="Azuraya Grup Logo" />
           </Link>
         </div>
@@ -82,12 +103,12 @@ export default function TemplateHeader() {
           <span></span>
         </button>
   
-        <div className={"header__mobile-menu "} role="navigation" aria-label="Mobile navigation">
-          <Link href="/#beranda" className="header__nav-link" onClick={() => setIsMenuOpen(false)}>Beranda</Link>
-          <Link href="/#tentang" className="header__nav-link" onClick={() => setIsMenuOpen(false)}>Tentang Kami</Link>
-          <Link href="/#produk" className="header__nav-link" onClick={() => setIsMenuOpen(false)}>Produk</Link>
-          <Link href="/#cabang" className="header__nav-link" onClick={() => setIsMenuOpen(false)}>Cabang</Link>
-          <Link href="/#faq" className="header__nav-link" onClick={() => setIsMenuOpen(false)}>FAQ</Link>
+        <div className={"header__mobile-menu " + (isMenuOpen ? "header__mobile-menu--open" : "")} role="navigation" aria-label="Mobile navigation">
+          <Link href="/#beranda" className="header__nav-link" onClick={(e) => handleNavClick(e, '#beranda')}>Beranda</Link>
+          <Link href="/#tentang" className="header__nav-link" onClick={(e) => handleNavClick(e, '#tentang')}>Tentang Kami</Link>
+          <Link href="/#produk" className="header__nav-link" onClick={(e) => handleNavClick(e, '#produk')}>Produk</Link>
+          <Link href="/#cabang" className="header__nav-link" onClick={(e) => handleNavClick(e, '#cabang')}>Cabang</Link>
+          <Link href="/#faq" className="header__nav-link" onClick={(e) => handleNavClick(e, '#faq')}>FAQ</Link>
           
           <div className="header__mobile-actions mt-4 flex flex-col gap-2">
             {!user ? (
