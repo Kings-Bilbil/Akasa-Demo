@@ -34,20 +34,20 @@ export default function ProdukPage() {
             {/*  Top Stroke  */}
             <div className="products-page__top-stroke"></div>
             
-            <div className="products-page__header">
-              <h1 className="products-page__title">Jelajahi Produk Azuraya</h1>
-              <div className="products-page__search-container">
+            <div className="products-page__header" style={{ textAlign: 'center' }}>
+              <h1 className="products-page__title">Jelajahi <span style={{ color: 'var(--color-gold)' }}>Produk Azuraya</span></h1>
+              <div className="products-page__search-container" style={{ margin: '0 auto' }}>
                 <input type="text" className="products-page__search-input" placeholder="Cari Produk" />
-                <div className="products-page__search-icon">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z" stroke="#ABB7C2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M21 21L16.65 16.65" stroke="#ABB7C2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <button className="products-page__search-btn">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z" stroke="#000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M21 21L16.65 16.65" stroke="#000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
-                </div>
+                </button>
               </div>
             </div>
 
-            <div className="products-page__categories">
+            <div className="products-page__categories" style={{ justifyContent: 'center' }}>
               <button className="category-btn category-btn--active">Semua</button>
               <button className="category-btn">Liquid</button>
               <button className="category-btn">Device</button>
@@ -72,10 +72,12 @@ export default function ProdukPage() {
                       Tersedia di {branches.length} cabang
                     </p>
                     <div className="product-card__action">
-                      <span>Lihat Detail</span>
-                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M6.5 13.5L11 9L6.5 4.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
+                      <span style={{ fontSize: '14px' }}>Lihat Detail</span>
+                      <div style={{ width: '20px', height: '20px', backgroundColor: 'var(--color-gold)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M9 18L15 12L9 6" stroke="black" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
                     </div>
                   </div>
                 </Link>
