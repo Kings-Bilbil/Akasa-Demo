@@ -31,7 +31,8 @@ export default function CabangClient({ branches, branchMaps }: { branches: any[]
     return data || { mapUrl: '', phone: '', openTime: '', closeTime: '' };
   };
 
-  const filteredBranches = branches.filter(b => b.name.toLowerCase().includes(search.toLowerCase()));`n  const selectedBranch = branches.find(b => b.id === selectedBranchId);
+  const filteredBranches = branches.filter(b => b.name.toLowerCase().includes(search.toLowerCase()));
+  const selectedBranch = branches.find(b => b.id === selectedBranchId);
   const selectedBranchData = selectedBranchId ? getBranchData(selectedBranchId) : null;
   const mapUrl = selectedBranchData?.mapUrl || null;
 
@@ -141,6 +142,3 @@ export default function CabangClient({ branches, branchMaps }: { branches: any[]
     </div>
   );
 }
-
-
-
