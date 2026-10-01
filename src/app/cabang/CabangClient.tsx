@@ -34,7 +34,7 @@ export default function CabangClient({ branches, branchMaps }: { branches: any[]
   const mapUrl = selectedBranchData?.mapUrl || null;
 
   return (
-    <div className="store-locator__content flex gap-10">
+    <div className="store-locator__content flex gap-10 w-full">
       {/* Left Panel */}
       <div className="store-locator__sidebar flex flex-col gap-6 w-[440px] shrink-0">
         <div className="store-locator__list flex flex-col gap-6 overflow-y-auto max-h-[600px] pr-4 custom-scrollbar">
@@ -117,3 +117,4 @@ export default function CabangClient({ branches, branchMaps }: { branches: any[]
     </div>
   );
 }
+
