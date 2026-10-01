@@ -51,16 +51,6 @@ export default async function ProductDetail({ params }: { params: Promise<{ id: 
     <>
       <TemplateHeader />
       <main className="product-detail pt-24 min-h-screen">
-        <div className="flex justify-between items-center px-6 py-4 bg-black border-b border-gray-800">
-          <h1 className="text-xl font-bold text-white">Detail <span className="text-yellow-500">Produk</span></h1>
-          <Link href="/produk" className="text-white hover:text-yellow-500">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </Link>
-        </div>
-
         <div className="product-detail__inner">
           {/* Left Column: Images */}
           <div className="product-detail__gallery">
@@ -88,21 +78,21 @@ export default async function ProductDetail({ params }: { params: Promise<{ id: 
             <div className="product-detail__header-row">
               <h1 className="product-detail__title">{product.name}</h1>
               <div className="product-detail__actions">
-                <button className="btn-action btn-action--like" aria-label="Like">
+                <button className="btn-action btn-action--like flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg" aria-label="Like" style={{ backgroundColor: '#2a1215', color: '#ff4d4f' }}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="#F44336" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-                  <span className="like-count">109</span>
+                  <span className="like-count font-bold text-sm">109</span>
                 </button>
-                <button className="btn-action btn-action--save" aria-label="Save">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+                <button className="btn-action btn-action--save flex items-center justify-center w-10 h-10 rounded-lg" aria-label="Save" style={{ backgroundColor: '#1A1C23' }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="var(--color-gold)" strokeWidth="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
                 </button>
               </div>
             </div>
             
             <p className="product-detail__subtitle">Liquid - 60 ml - Nikotin 3%</p>
             
-            <div className="product-detail__pricing">
-              <span className="price-current">Rp {product.price.toLocaleString('id-ID')}</span>
-              <span className="price-old">Rp {(product.price + 10000).toLocaleString('id-ID')}</span>
+            <div className="product-detail__pricing flex flex-col gap-1 mb-4">
+              <span className="price-current text-gold font-bold" style={{ color: 'var(--color-gold)', fontSize: '36px' }}>Rp {product.price.toLocaleString('id-ID')}</span>
+              <span className="price-old text-gray-500 line-through" style={{ fontSize: '20px' }}>Rp {(product.price + 10000).toLocaleString('id-ID')}</span>
             </div>
             
             <hr className="product-detail__divider" />
@@ -132,3 +122,7 @@ export default async function ProductDetail({ params }: { params: Promise<{ id: 
     </>
   );
 }
+
+
+
+
