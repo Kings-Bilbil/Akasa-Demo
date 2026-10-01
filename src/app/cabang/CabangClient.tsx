@@ -8,7 +8,7 @@ export default function CabangClient({ branches, branchMaps }: { branches: any[]
   const [search, setSearch] = useState('');
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(branches.length > 0 ? branches[0].id : null);
 
-  const filteredBranches = branches.filter(b => b.name.toLowerCase().includes(search.toLowerCase()));
+  const filteredBranches = branches;
   const selectedBranch = branches.find(b => b.id === selectedBranchId);
   const mapUrl = selectedBranchId ? branchMaps[selectedBranchId] : null;
 
@@ -16,19 +16,7 @@ export default function CabangClient({ branches, branchMaps }: { branches: any[]
     <div className="store-locator__content flex gap-10">
       {/* Left Panel */}
       <div className="store-locator__sidebar flex flex-col gap-6 w-[440px] shrink-0">
-        <div className="store-locator__search flex items-center gap-3 p-3 rounded-lg border border-gray-700 bg-transparent">
-          <Link href="/" className="text-gray-400 hover:text-white">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-          </Link>
-          <input 
-            type="text" 
-            placeholder="Cari cabang..." 
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="flex-grow bg-transparent border-none text-white focus:outline-none"
-          />
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-        </div>
+        
 
         <div className="store-locator__list flex flex-col gap-6 overflow-y-auto max-h-[600px] pr-4 custom-scrollbar">
           {filteredBranches.map(branch => {
@@ -39,11 +27,9 @@ export default function CabangClient({ branches, branchMaps }: { branches: any[]
                 className={`store-locator__item flex gap-4 cursor-pointer transition-opacity hover:opacity-80 ${isActive ? 'active' : ''}`}
                 onClick={() => setSelectedBranchId(branch.id)}
               >
-                <div className={`store-locator__checkbox w-6 h-6 shrink-0 mt-1 rounded border-2 transition-colors flex items-center justify-center ${isActive ? 'bg-gold border-gold' : 'border-white'}`}>
-                  {isActive && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
-                </div>
                 
-                <div className="store-locator__item-info flex-grow flex flex-col gap-2">
+                
+                <div className={`store-locator__item-info flex-grow flex flex-col gap-2 ${isActive ? 'border-l-4 border-[#F5C518] pl-3' : 'border-l-4 border-transparent pl-3'}`}>
                   <div className="flex justify-between items-start gap-3">
                     <h4 className="text-base font-bold text-white leading-tight m-0">{branch.name}</h4>
                     <span className="text-sm text-gray-400 flex items-center gap-1 shrink-0">
@@ -80,3 +66,5 @@ export default function CabangClient({ branches, branchMaps }: { branches: any[]
     </div>
   );
 }
+
+
