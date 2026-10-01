@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import TemplateHeader from '@/components/TemplateHeader';
+import './cabang.css';
 
 export default function CabangPage() {
   return (
