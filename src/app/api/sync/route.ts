@@ -21,21 +21,20 @@ export async function POST() {
       if (error) console.error("Error upsert branch:", error);
     }
 
-    // 3. Ambil data barang dari Accurate (INV)
-    const itemsResponse = await fetchAccurateAPI('/item/list.do?fields=id,no,name,unitPrice');
+    // 3. Ambil data barang dari Accurate (INV) beserta kategorinya
+    const itemsResponse = await fetchAccurateAPI('/item/list.do?fields=id,no,name,unitPrice,itemCategory');
     const items = itemsResponse.d || [];
 
     // 4. Simpan barang ke Supabase (Upsert)
     let syncedItemsCount = 0;
     for (const item of items) {
-      // Ambil URL gambar dari response Accurate. 
-      // CATATAN: Field pasti dari Accurate API untuk attachment bisa bervariasi. 
-      // Kita perlu mengecek JSON response aslinya untuk mengetahui nama field yang tepat.
-      // Kita asumsikan semua barang yang ditarik adalah barang yang akan dijual (bisa difilter lebih lanjut jika perlu)
+      const categoryName = item.itemCategory?.name || 'Uncategorized';
+      
       const { error } = await supabase.from('products_cache').upsert({
-        accurate_item_id: item.no, // Gunakan Nomor Barang (misal: VP001) bukan ID database
+        accurate_item_id: item.no,
         name: item.name || item.modifierName,
         price: item.unitPrice || 0,
+        category: categoryName,
         last_synced_at: new Date().toISOString()
       }, { onConflict: 'accurate_item_id' });
       
@@ -56,4 +55,3 @@ export async function POST() {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
-
