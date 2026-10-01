@@ -2,7 +2,7 @@
        PRODUCT DETAIL SECTION
        ============================================ */
     .product-detail {
-      padding: 60px 40px;
+      padding: 140px 40px 60px; /* Increased top padding to clear fixed header */
       max-width: 1280px;
       margin: 0 auto;
       color: var(--color-text-white);
