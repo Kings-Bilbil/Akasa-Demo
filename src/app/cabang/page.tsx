@@ -2,11 +2,16 @@ import Link from 'next/link';
 import TemplateHeader from '@/components/TemplateHeader';
 import './cabang.css';
 
-export default function CabangPage() {
+import { createClient } from '@/utils/supabase/server';
+
+export default async function CabangPage() {
+  const supabase = await createClient();
+  const { data: gmapsData } = await supabase.from('web_settings').select('value').eq('key', 'gmaps_iframe_url').single();
+  const gmapsUrl = gmapsData?.value || "https://www.google.com/maps/d/embed?mid=1aBcdE_...&ehbc=2E312F";
   return (
     <>
       <TemplateHeader />
-      <main className="store-locator-page bg-black text-white min-h-screen pt-20">
+      <main className="store-locator-page bg-black text-white min-h-screen pt-[140px] px-8 md:px-16">
         
     <div className="store-locator__header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '24px', marginBottom: '24px' }}>
       <h2 style={{ fontSize: '24px', margin: 0 }}>Cari <span style={{ color: '#F5C518' }}>Cabang Azuraya</span></h2>
@@ -106,8 +111,10 @@ export default function CabangPage() {
       
       {/*  Right Panel  */}
       <div className="store-locator__map-panel">
-        <div className="store-locator__map-wrapper">
-          <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1m3!1d3989.8166549298533!2d109.351478!3d-0.046399!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMMKwMDInNDcuMCJTIDEwOcKwMjEnMDUuMyJF!5e0!3m2!1sen!2sid!4v1700000000000!5m2!1sen!2sid" allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade"></iframe>
+        <div className="store-locator__map-wrapper" style={{ overflow: 'hidden', position: 'relative', width: '100%', height: '480px', borderRadius: '12px' }}>
+          <div style={{ position: 'absolute', top: '-65px', height: 'calc(100% + 65px)', width: '100%' }}>
+            <iframe src={gmapsUrl} width="100%" height="100%" style={{ border: 0 }} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade"></iframe>
+          </div>
         </div>
         <button className="btn-primary store-locator__btn">Pilih Cabang ini</button>
       </div>
@@ -117,3 +124,6 @@ export default function CabangPage() {
     </>
   );
 }
+
+
+
