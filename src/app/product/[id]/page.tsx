@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import CheckoutButton from '@/components/CheckoutButton';
 import TemplateHeader from '@/components/TemplateHeader';
+import './detail.css';
 
 export default async function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
