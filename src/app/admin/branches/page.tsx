@@ -35,7 +35,8 @@ export default async function AdminBranchesPage() {
       <h1 className="text-3xl font-bold text-gray-900 mb-2">Pengaturan Peta Cabang</h1>
       <p className="text-gray-600 mb-8">Atur link iframe Google Maps untuk masing-masing cabang agar muncul ketika cabang dipilih.</p>
       
-      <BranchList branches={branches || []} initialMaps={branchMaps} />
+      <BranchList branches={branches || []} initialData={branchMaps} />
     </div>
   )
 }
+
