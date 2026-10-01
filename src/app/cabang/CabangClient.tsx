@@ -72,25 +72,25 @@ export default function CabangClient({ branches, branchMaps }: { branches: any[]
             return (
               <div 
                 key={branch.id} 
-                className={`store-locator__item flex gap-4 cursor-pointer transition-opacity hover:opacity-80 ${isActive ? 'active' : ''}`}
+                className={`store-locator__item flex gap-4 cursor-pointer transition-transform hover:scale-[1.02] ${isActive ? 'active' : ''}`}
                 onClick={() => setSelectedBranchId(branch.id)}
               >
-                <div className={`store-locator__item-info flex-grow flex flex-col gap-2 ${isActive ? 'border-l-4 border-[#F5C518] pl-3' : 'border-l-4 border-transparent pl-3'}`}>
+                <div className={`store-locator__item-info flex-grow flex flex-col gap-2 p-5 rounded-2xl transition-all duration-300 ${isActive ? 'bg-[#F5C518] shadow-lg' : 'bg-transparent border border-gray-800 hover:border-gray-600'}`}>
                   <div className="flex justify-between items-start gap-3">
-                    <h4 className="text-base font-bold text-white leading-tight m-0">{branch.name}</h4>
+                    <h4 className={`text-lg font-bold leading-tight m-0 ${isActive ? 'text-black' : 'text-white'}`}>{branch.name}</h4>
                   </div>
                   <p className="text-sm m-0">
                     {isOpen ? (
-                      <span className="text-green-500 font-semibold">Buka</span>
+                      <span className={`font-bold ${isActive ? 'text-green-800' : 'text-green-500'}`}>Buka</span>
                     ) : (
-                      <span className="text-red-500 font-semibold">Tutup</span>
+                      <span className={`font-bold ${isActive ? 'text-red-800' : 'text-red-500'}`}>Tutup</span>
                     )} 
-                    <span className="text-gray-400"> {statusText}</span>
+                    <span className={isActive ? 'text-gray-900 font-medium' : 'text-gray-400'}> {statusText}</span>
                   </p>
-                  <p className="text-sm text-gray-400 leading-snug m-0">{branch.address || 'Alamat belum diatur'}</p>
+                  <p className={`text-sm leading-relaxed m-0 ${isActive ? 'text-gray-900 font-medium' : 'text-gray-400'}`}>{branch.address || 'Alamat belum diatur'}</p>
                   {bData.phone && (
-                    <p className="text-sm text-gray-400 flex items-center gap-1 m-0">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                    <p className={`text-sm flex items-center gap-2 m-0 mt-1 ${isActive ? 'text-black font-bold' : 'text-gray-400'}`}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
                       {bData.phone}
                     </p>
                   )}
@@ -103,7 +103,7 @@ export default function CabangClient({ branches, branchMaps }: { branches: any[]
       
       {/* Right Panel */}
       <div className="store-locator__map-panel flex-grow flex flex-col gap-6">
-        <div className="store-locator__map-wrapper w-full h-[480px] rounded-3xl overflow-hidden bg-gray-900 border border-gray-800 relative">
+        <div className="store-locator__map-wrapper w-full h-[480px] rounded-3xl overflow-hidden bg-gray-900 border border-gray-800 relative shadow-2xl">
           {mapUrl ? (
             <iframe src={mapUrl} width="100%" height="100%" style={{ border: 0, position: 'absolute', top: 0, left: 0 }} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade"></iframe>
           ) : (
@@ -112,9 +112,8 @@ export default function CabangClient({ branches, branchMaps }: { branches: any[]
             </div>
           )}
         </div>
-        <button className="w-full bg-yellow-500 text-black font-bold py-4 rounded-full text-lg hover:bg-yellow-400 transition-colors">Pilih Cabang ini</button>
+        <button className="w-full bg-yellow-500 text-black font-bold py-4 rounded-full text-lg hover:bg-yellow-400 transition-colors shadow-lg">Pilih Cabang ini</button>
       </div>
     </div>
   );
 }
-
