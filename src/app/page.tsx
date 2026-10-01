@@ -122,7 +122,7 @@ export default async function Home() {
           <h2 className="products__title">
             Jelajahi <span className="products__title--gold">Produk Azuraya</span>
           </h2>
-          <a href="produk.html" className="btn-primary">
+          <a href="/produk" className="btn-primary">
             Lihat Semua Produk &amp; Ketersediaan
           </a>
         </div>
