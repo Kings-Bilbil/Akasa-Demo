@@ -82,7 +82,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
               </CardTitle>
             </CardHeader>
 
-            <CardContent className="grid gap-6 pt-6 pb-8">
+            <CardContent className="grid gap-5 pt-4 pb-4">
               {error && (
                 <div className="bg-red-950/50 border border-red-900/50 text-red-400 px-4 py-3 rounded-md text-sm font-medium">
                   {error === 'true' ? 'Email atau Password salah.' : error}
@@ -156,7 +156,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
 
 
 
-              <Button type="submit" className="w-full h-12 rounded-lg bg-[#F5C518] text-black font-bold hover:bg-yellow-400 transition-colors text-base cursor-pointer" style={{ marginTop: "24px", marginBottom: "0px" }}>
+              <Button type="submit" className="w-full h-12 rounded-lg bg-[#F5C518] text-black font-bold hover:bg-yellow-400 transition-colors text-base cursor-pointer" style={{ marginTop: "0px", marginBottom: "32px" }}>
                 {isRegister ? "Daftar Sekarang" : "Masuk"}
               </Button>
             </CardContent>
@@ -175,6 +175,8 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
     </section>
   );
 }
+
+
 
 
 
