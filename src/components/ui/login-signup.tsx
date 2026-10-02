@@ -68,7 +68,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
       <div className="h-full w-full grid place-items-center px-4 relative z-10">
         <form action={isRegister ? "/api/auth/register" : "/api/auth/login"} method="POST" className="w-full max-w-md">
           <Card className="card-animate w-full border-zinc-800 bg-zinc-950/80 backdrop-blur-xl shadow-2xl">
-            <CardHeader className="space-y-4 text-center pt-14 pb-4">
+            <CardHeader className="space-y-4 text-center pb-4" style={{ paddingTop: "80px" }}>
               <div className="flex justify-center items-center gap-3 mb-1">
                 <img 
                   src="/images/logo.png" 
@@ -156,12 +156,12 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
 
 
 
-              <Button type="submit" className="w-full h-12 mt-8 mb-2 rounded-lg bg-[#F5C518] text-black font-bold hover:bg-yellow-400 transition-colors text-base cursor-pointer">
+              <Button type="submit" className="w-full h-12 rounded-lg bg-[#F5C518] text-black font-bold hover:bg-yellow-400 transition-colors text-base cursor-pointer" style={{ marginTop: "40px", marginBottom: "20px" }}>
                 {isRegister ? "Daftar Sekarang" : "Masuk"}
               </Button>
             </CardContent>
 
-            <CardFooter className="flex flex-col items-center gap-3 pb-24 pt-8 text-base text-zinc-400">
+            <CardFooter className="flex flex-col items-center gap-3 pt-8 text-base text-zinc-400" style={{ paddingBottom: "80px" }}>
               <div>
                 {isRegister ? "Sudah punya akun?" : "Belum punya akun?"}
                 <Link className="ml-2 font-bold text-zinc-200 hover:text-[#F5C518] transition-colors" href={isRegister ? "/login" : "/register"}>
@@ -175,6 +175,8 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
     </section>
   );
 }
+
+
 
 
 
