@@ -68,7 +68,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
       <div className="h-full w-full grid place-items-center px-4 relative z-10">
         <form action={isRegister ? "/api/auth/register" : "/api/auth/login"} method="POST" className="w-full max-w-md">
           <Card className="card-animate w-full border-zinc-800 bg-zinc-950/80 backdrop-blur-xl shadow-2xl">
-            <CardHeader className="space-y-4 text-center pb-4" style={{ paddingTop: "32px" }}>
+            <CardHeader className="space-y-4 text-center" style={{ paddingTop: "32px", paddingBottom: "48px" }}>
               <div className="flex justify-center items-center gap-3 mb-1">
                 <img 
                   src="/images/logo.png" 
@@ -175,6 +175,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
     </section>
   );
 }
+
 
 
 
