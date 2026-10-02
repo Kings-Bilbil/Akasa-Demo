@@ -149,7 +149,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
               {isRegister && (
                 <div className="grid gap-2">
                   <label htmlFor="name" className="text-sm font-medium leading-none text-zinc-300">Nama Lengkap</label>
-                  <div className="relative flex items-center">
+                  <div className="relative flex items-center w-full">
                     <div className="absolute left-3 top-0 bottom-0 flex items-center justify-center pointer-events-none">
                       <svg className="h-4 w-4 text-zinc-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                     </div>
@@ -159,7 +159,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
                       type="text"
                       required
                       placeholder="Nama Anda"
-                      className="flex h-11 w-full rounded-lg border border-zinc-800 bg-zinc-900/50 pl-10 pr-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#F5C518]/50 focus:border-[#F5C518]/50 transition-all"
+                      className="block h-11 w-full rounded-lg border border-zinc-800 bg-zinc-900/50 pl-10 pr-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#F5C518]/50 focus:border-[#F5C518]/50 transition-all"
                     />
                   </div>
                 </div>
@@ -167,7 +167,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
 
               <div className="grid gap-2">
                 <label htmlFor="email" className="text-sm font-medium leading-none text-zinc-300">Email</label>
-                <div className="relative flex items-center">
+                <div className="relative flex items-center w-full">
                   <div className="absolute left-3 top-0 bottom-0 flex items-center justify-center pointer-events-none">
                     <Mail className="h-4 w-4 text-zinc-500" />
                   </div>
@@ -177,14 +177,14 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
                     type="email"
                     required
                     placeholder="anda@email.com"
-                    className="flex h-11 w-full rounded-lg border border-zinc-800 bg-zinc-900/50 pl-10 pr-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#F5C518]/50 focus:border-[#F5C518]/50 transition-all"
+                    className="block h-11 w-full rounded-lg border border-zinc-800 bg-zinc-900/50 pl-10 pr-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#F5C518]/50 focus:border-[#F5C518]/50 transition-all"
                   />
                 </div>
               </div>
 
               <div className="grid gap-2">
                 <label htmlFor="password" className="text-sm font-medium leading-none text-zinc-300">Password</label>
-                <div className="relative flex items-center">
+                <div className="relative flex items-center w-full">
                   <div className="absolute left-3 top-0 bottom-0 flex items-center justify-center pointer-events-none">
                     <Lock className="h-4 w-4 text-zinc-500" />
                   </div>
@@ -194,7 +194,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
                     type={showPassword ? "text" : "password"}
                     required
                     placeholder="••••••••"
-                    className="flex h-11 w-full rounded-lg border border-zinc-800 bg-zinc-900/50 pl-10 pr-10 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#F5C518]/50 focus:border-[#F5C518]/50 transition-all"
+                    className="block h-11 w-full rounded-lg border border-zinc-800 bg-zinc-900/50 pl-10 pr-10 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#F5C518]/50 focus:border-[#F5C518]/50 transition-all"
                   />
                   <button
                     type="button"
@@ -246,4 +246,5 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
     </section>
   );
 }
+
 
