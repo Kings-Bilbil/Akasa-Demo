@@ -5,9 +5,19 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 
+
+const LoadingSpinner = () => (
+  <div style={{ position: "relative", width: "48px", height: "48px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div className="azu-spinner">
+      <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+    </div>
+  </div>
+);
+
 export default function TemplateHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
   
@@ -50,7 +60,44 @@ export default function TemplateHeader() {
   };
 
   return (
-    <header className={`header ${isScrolled ? 'header--scrolled' : ''}`}>
+    <>
+      <style>{`
+        .azu-spinner {
+          position: absolute;
+          width: 9px;
+          height: 9px;
+        }
+
+        .azu-spinner div {
+          position: absolute;
+          width: 50%;
+          height: 150%;
+          background: #F5C518;
+          transform: rotate(calc(var(--rotation) * 1deg)) translate(0, calc(var(--translation) * 1%));
+          animation: spinner-fzua35 1s calc(var(--delay) * 1s) infinite ease;
+        }
+
+        .azu-spinner div:nth-child(1) { --delay: 0.1; --rotation: 36; --translation: 150; }
+        .azu-spinner div:nth-child(2) { --delay: 0.2; --rotation: 72; --translation: 150; }
+        .azu-spinner div:nth-child(3) { --delay: 0.3; --rotation: 108; --translation: 150; }
+        .azu-spinner div:nth-child(4) { --delay: 0.4; --rotation: 144; --translation: 150; }
+        .azu-spinner div:nth-child(5) { --delay: 0.5; --rotation: 180; --translation: 150; }
+        .azu-spinner div:nth-child(6) { --delay: 0.6; --rotation: 216; --translation: 150; }
+        .azu-spinner div:nth-child(7) { --delay: 0.7; --rotation: 252; --translation: 150; }
+        .azu-spinner div:nth-child(8) { --delay: 0.8; --rotation: 288; --translation: 150; }
+        .azu-spinner div:nth-child(9) { --delay: 0.9; --rotation: 324; --translation: 150; }
+        .azu-spinner div:nth-child(10) { --delay: 1; --rotation: 360; --translation: 150; }
+
+        @keyframes spinner-fzua35 {
+          0%, 10%, 20%, 30%, 50%, 60%, 70%, 80%, 90%, 100% {
+            transform: rotate(calc(var(--rotation) * 1deg)) translate(0, calc(var(--translation) * 1%));
+          }
+          50% {
+            transform: rotate(calc(var(--rotation) * 1deg)) translate(0, calc(var(--translation) * 1.5%));
+          }
+        }
+      `}</style>
+      <header className={`header ${isScrolled ? 'header--scrolled' : ''}`}>
       <div className="header__inner">
         <nav className="header__nav" role="navigation" aria-label="Main navigation">
           <Link href="/#beranda" onClick={(e) => handleNavClick(e, '#beranda')} className="header__nav-link">Beranda</Link>
@@ -129,6 +176,10 @@ export default function TemplateHeader() {
         </div>
       </div>
     </header>
+    </>
   );
 }
+
+
+
 
