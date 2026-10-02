@@ -93,7 +93,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
                       type="text"
                       required
                       placeholder="Nama Anda"
-                      className="!pl-10 h-11 bg-zinc-900 border-zinc-800 text-zinc-50 placeholder:text-zinc-500 focus-visible:ring-[#F5C518]"
+                      className="!pl-10 h-12 bg-zinc-900 border-zinc-800 text-zinc-50 placeholder:text-zinc-500 focus-visible:ring-[#F5C518]"
                     />
                   </div>
                 </div>
@@ -111,7 +111,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
                     type="email"
                     required
                     placeholder="anda@email.com"
-                    className="!pl-10 h-11 bg-zinc-900 border-zinc-800 text-zinc-50 placeholder:text-zinc-500 focus-visible:ring-[#F5C518]"
+                    className="!pl-10 h-12 bg-zinc-900 border-zinc-800 text-zinc-50 placeholder:text-zinc-500 focus-visible:ring-[#F5C518]"
                   />
                 </div>
               </div>
@@ -128,7 +128,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
                     type={showPassword ? "text" : "password"}
                     required
                     placeholder="••••••••"
-                    className="!pl-10 !pr-10 h-11 bg-zinc-900 border-zinc-800 text-zinc-50 placeholder:text-zinc-500 focus-visible:ring-[#F5C518]"
+                    className="!pl-10 !pr-10 h-12 bg-zinc-900 border-zinc-800 text-zinc-50 placeholder:text-zinc-500 focus-visible:ring-[#F5C518]"
                   />
                   <button
                     type="button"
@@ -147,7 +147,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
 
 
 
-              <Button type="submit" className="w-full h-11 mt-3 rounded-lg bg-[#F5C518] text-black font-bold hover:bg-yellow-400 transition-colors text-base cursor-pointer">
+              <Button type="submit" className="w-full h-12 mt-3 rounded-lg bg-[#F5C518] text-black font-bold hover:bg-yellow-400 transition-colors text-base cursor-pointer">
                 {isRegister ? "Daftar Sekarang" : "Masuk"}
               </Button>
             </CardContent>
@@ -166,6 +166,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
     </section>
   );
 }
+
 
 
 
