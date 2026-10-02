@@ -124,7 +124,7 @@ export default function CabangClient({ branches, branchMaps }: { branches: any[]
       
       {/* Right Panel */}
       <div className="store-locator__map-panel flex-grow flex flex-col gap-6">
-        <div className="store-locator__map-wrapper w-full h-[480px] rounded-3xl overflow-hidden bg-gray-900 border border-gray-800 relative">
+        <div className="store-locator__map-wrapper w-full flex-grow min-h-[480px] rounded-3xl overflow-hidden bg-gray-900 border border-gray-800 relative">
           {mapUrl ? (
             <iframe src={mapUrl} width="100%" height="100%" style={{ border: 0, position: 'absolute', top: 0, left: 0 }} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade"></iframe>
           ) : (
@@ -133,15 +133,13 @@ export default function CabangClient({ branches, branchMaps }: { branches: any[]
             </div>
           )}
         </div>
-        {selectedBranch ? (
-          <a href={mapUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedBranch.name + " " + (selectedBranch.address || ""))}`} target="_blank" rel="noopener noreferrer" className="w-full bg-[#F5C518] text-black font-bold py-4 rounded-full text-lg hover:bg-yellow-400 transition-colors flex items-center justify-center shadow-lg" style={{ color: "#000000" }}>Pilih Cabang ini</a>
-        ) : (
-          <button className="w-full bg-[#F5C518] text-black font-semibold py-4 rounded-full text-lg opacity-70 cursor-not-allowed flex items-center justify-center shadow-lg" style={{ color: "#000000" }}>Pilih Cabang ini</button>
-        )}
       </div>
     </div>
   );
 }
+
+
+
 
 
 
