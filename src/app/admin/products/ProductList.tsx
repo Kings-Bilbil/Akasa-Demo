@@ -1,10 +1,12 @@
 'use client';
 import { useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
+import Popup from '@/components/Popup';
 
 export default function ProductList({ initialProducts }: { initialProducts: any[] }) {
   const [products, setProducts] = useState(initialProducts);
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [popupData, setPopupData] = useState<{message: string, type: 'success' | 'error'} | null>(null);
   const supabase = createClient();
 
   const handleUpdateImages = async (productId: string, e: React.FormEvent) => {
@@ -24,16 +26,18 @@ export default function ProductList({ initialProducts }: { initialProducts: any[
       .eq('id', productId);
       
     if (error) {
-      alert('Gagal menyimpan: ' + error.message);
+      setPopupData({ message: "Gagal menyimpan: " + error.message, type: "error" });
     } else {
       setProducts(products.map(p => p.id === productId ? { ...p, image_url: combinedUrl } : p));
-      alert('Berhasil disimpan!');
+      setPopupData({ message: "Pengaturan gambar berhasil disimpan!", type: "success" });
     }
     setLoadingId(null);
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <>
+      {popupData && <Popup message={popupData.message} type={popupData.type} onClose={() => setPopupData(null)} />}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {products.map(product => {
         const images = product.image_url ? product.image_url.split(',') : [];
         const url1 = images[0] || '';
@@ -83,5 +87,7 @@ export default function ProductList({ initialProducts }: { initialProducts: any[
         );
       })}
     </div>
+    </>
   );
 }
+

@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { saveBranchMapsAction } from './actions';
+import Popup from '@/components/Popup';
 
 type BranchInfo = {
   mapUrl?: string;
@@ -23,6 +24,7 @@ export default function BranchList({ branches, initialData }: { branches: any[],
 
   const [data, setData] = useState<Record<string, BranchInfo>>(normalizedInitialData);
   const [loading, setLoading] = useState(false);
+  const [popupData, setPopupData] = useState<{message: string, type: 'success' | 'error'} | null>(null);
   const supabase = createClient();
 
   const handleFieldChange = (branchId: string, field: keyof BranchInfo, value: string) => {
@@ -39,15 +41,16 @@ export default function BranchList({ branches, initialData }: { branches: any[],
     setLoading(true);
     try {
       await saveBranchMapsAction(data);
-      alert("Pengaturan cabang berhasil disimpan!");
+      setPopupData({ message: "Pengaturan cabang berhasil disimpan!", type: "success" });
     } catch (err: any) {
-      alert("Gagal menyimpan: " + err.message);
+      setPopupData({ message: "Gagal menyimpan: " + err.message, type: "error" });
     }
     setLoading(false);
   };
 
   return (
     <div>
+      {popupData && <Popup message={popupData.message} type={popupData.type} onClose={() => setPopupData(null)} />}
       <div className="flex justify-end mb-4">
         <button 
           onClick={handleSave}
@@ -126,5 +129,6 @@ export default function BranchList({ branches, initialData }: { branches: any[],
     </div>
   );
 }
+
 
 
