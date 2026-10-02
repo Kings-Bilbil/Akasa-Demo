@@ -35,8 +35,16 @@ export default function TemplateHeader() {
       if (data?.user) {
         supabase.from('customers').select('full_name').eq('id', data.user.id).single().then((res) => {
           setUser({ ...data.user, fullName: res.data?.full_name || 'User' });
+          setIsLoading(false);
+        }).catch(() => {
+          setUser(data.user);
+          setIsLoading(false);
         });
+      } else {
+        setIsLoading(false);
       }
+    }).catch(() => {
+      setIsLoading(false);
     });
   }, []);
 
