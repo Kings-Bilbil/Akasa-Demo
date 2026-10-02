@@ -57,15 +57,16 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
 
       {/* Centered Login Card */}
       <div className="h-full w-full grid place-items-center px-4 relative z-10">
-        <form action={isRegister ? "/api/auth/register" : "/api/auth/login"} method="POST" className="w-full max-w-md">
+        <form action={isRegister ? "/api/auth/register" : "/api/auth/login"} method="POST" className="w-full max-w-lg">
           <Card className="card-animate w-full border-zinc-800 bg-zinc-950/80 backdrop-blur-xl shadow-2xl">
             <CardHeader className="space-y-4 text-center pb-2">
-              <div className="flex justify-center mb-1">
+              <div className="flex justify-center items-center gap-3 mb-1">
                 <img 
                   src="/images/logo.png" 
                   alt="Azuraya Logo" 
-                  className="object-contain drop-shadow-md" style={{ height: "30px", width: "auto" }}
+                  className="object-contain drop-shadow-md" style={{ height: "45px", width: "auto" }}
                 />
+                <span className="text-3xl font-bold tracking-widest text-[#F5C518]">AZURAYA</span>
               </div>
               <CardTitle className="text-2xl font-bold text-zinc-100 tracking-tight">
                 {isRegister ? "Daftar Akun Baru" : "Selamat Datang"}
@@ -81,7 +82,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
 
               {isRegister && (
                 <div className="grid gap-2">
-                  <Label htmlFor="name" className="text-zinc-300 font-medium" style={{ paddingLeft: "40px" }}>
+                  <Label htmlFor="name" className="text-zinc-300 font-medium ml-1">
                     Nama Lengkap
                   </Label>
                   <div className="relative flex items-center w-full">
@@ -99,7 +100,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
               )}
 
               <div className="grid gap-2">
-                <Label htmlFor="email" className="text-zinc-300 font-medium" style={{ paddingLeft: "40px" }}>
+                <Label htmlFor="email" className="text-zinc-300 font-medium ml-1">
                   Email
                 </Label>
                 <div className="relative flex items-center w-full">
@@ -116,7 +117,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="password" className="text-zinc-300 font-medium" style={{ paddingLeft: "40px" }}>
+                <Label htmlFor="password" className="text-zinc-300 font-medium ml-1">
                   Password
                 </Label>
                 <div className="relative flex items-center w-full">
@@ -165,6 +166,8 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
     </section>
   );
 }
+
+
 
 
 
