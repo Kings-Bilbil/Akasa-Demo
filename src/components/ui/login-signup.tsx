@@ -3,18 +3,32 @@
 import * as React from "react";
 import { useState, useRef, useEffect } from "react";
 import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
+import {
   Eye,
   EyeOff,
+  Github,
   Lock,
   Mail,
   ArrowRight,
+  Chrome,
 } from "lucide-react";
-import Link from "next/link";
 
-export default function LoginCardSection({ error, isRegister = false }: { error?: string, isRegister?: boolean }) {
+export default function LoginCardSection() {
   const [showPassword, setShowPassword] = useState(false);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
@@ -74,7 +88,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
   }, []);
 
   return (
-    <section className="fixed inset-0 bg-[#09090b] text-zinc-50 overflow-hidden font-sans">
+    <section className="fixed inset-0 bg-zinc-950 text-zinc-50">
       <style>{`
         .accent-lines{position:absolute;inset:0;pointer-events:none;opacity:.7}
         .hline,.vline{position:absolute;background:#27272a;will-change:transform,opacity}
@@ -86,21 +100,35 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
         .vline:nth-child(4){left:22%;animation-delay:.42s}
         .vline:nth-child(5){left:50%;animation-delay:.54s}
         .vline:nth-child(6){left:78%;animation-delay:.66s}
+        .hline::after,.vline::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(250,250,250,.24),transparent);opacity:0;animation:shimmer .9s ease-out forwards}
+        .hline:nth-child(1)::after{animation-delay:.12s}
+        .hline:nth-child(2)::after{animation-delay:.22s}
+        .hline:nth-child(3)::after{animation-delay:.32s}
+        .vline:nth-child(4)::after{animation-delay:.42s}
+        .vline:nth-child(5)::after{animation-delay:.54s}
+        .vline:nth-child(6)::after{animation-delay:.66s}
         @keyframes drawX{0%{transform:scaleX(0);opacity:0}60%{opacity:.95}100%{transform:scaleX(1);opacity:.7}}
         @keyframes drawY{0%{transform:scaleY(0);opacity:0}60%{opacity:.95}100%{transform:scaleY(1);opacity:.7}}
-        
+        @keyframes shimmer{0%{opacity:0}35%{opacity:.25}100%{opacity:0}}
+
+        /* === Card minimal fade-up animation === */
         .card-animate {
           opacity: 0;
           transform: translateY(20px);
           animation: fadeUp 0.8s cubic-bezier(.22,.61,.36,1) 0.4s forwards;
         }
         @keyframes fadeUp {
-          to { opacity: 1; transform: translateY(0); }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
       `}</style>
 
-      <div className="absolute inset-0 pointer-events-none [background:radial-gradient(80%_60%_at_50%_30%,rgba(255,255,255,0.04),transparent_60%)]" />
+      {/* Subtle vignette */}
+      <div className="absolute inset-0 pointer-events-none [background:radial-gradient(80%_60%_at_50%_30%,rgba(255,255,255,0.06),transparent_60%)]" />
 
+      {/* Animated accent lines */}
       <div className="accent-lines">
         <div className="hline" />
         <div className="hline" />
@@ -110,141 +138,142 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
         <div className="vline" />
       </div>
 
-      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full opacity-50 mix-blend-screen pointer-events-none" />
+      {/* Particles */}
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 w-full h-full opacity-50 mix-blend-screen pointer-events-none"
+      />
 
-      <header className="absolute left-0 right-0 top-0 flex items-center justify-between px-8 py-6 border-b border-zinc-800/80 z-20 bg-[#09090b]/80 backdrop-blur-md">
-        <span className="text-sm tracking-[0.2em] uppercase font-bold text-[#F5C518]">
-          Azuraya Grup
+      {/* Header */}
+      <header className="absolute left-0 right-0 top-0 flex items-center justify-between px-6 py-4 border-b border-zinc-800/80">
+        <span className="text-xs tracking-[0.14em] uppercase text-zinc-400">
+          Dali Agents
         </span>
-        <Link href="/">
-          <button type="button" className="inline-flex items-center justify-center h-9 px-4 rounded-lg border border-zinc-700 bg-zinc-900 text-sm font-medium text-zinc-100 hover:bg-zinc-800 transition-colors cursor-pointer">
-            <span className="mr-2">Kembali ke Beranda</span>
-            <ArrowRight className="h-4 w-4" />
-          </button>
-        </Link>
+        <Button
+          variant="outline"
+          className="h-9 rounded-lg border-zinc-800 bg-zinc-900 text-zinc-50 hover:bg-zinc-900/80"
+        >
+          <span className="mr-2">Contact</span>
+          <ArrowRight className="h-4 w-4" />
+        </Button>
       </header>
 
-      <div className="h-full w-full flex items-center justify-center px-4 relative z-10 pt-16">
-        <form action={isRegister ? "/api/auth/register" : "/api/auth/login"} method="POST" className="w-full max-w-[400px]">
-          <div className="card-animate w-full border border-zinc-800 bg-[#111113]/80 backdrop-blur-xl rounded-2xl shadow-2xl flex flex-col overflow-hidden">
-            
-            <div className="p-8 pb-6 flex flex-col space-y-2">
-              <h3 className="text-2xl font-semibold leading-none tracking-tight text-zinc-100">
-                {isRegister ? "Daftar Akun Baru" : "Selamat Datang"}
-              </h3>
-              <p className="text-sm text-zinc-400">
-                {isRegister 
-                  ? "Bergabung dengan Azuraya untuk mulai berbelanja." 
-                  : "Silakan masuk ke akun Azuraya Anda."}
-              </p>
-            </div>
+      {/* Centered Login Card */}
+      <div className="h-full w-full grid place-items-center px-4 relative z-10">
+        <Card className="card-animate w-full max-w-sm border-zinc-800 bg-zinc-900/70 backdrop-blur supports-[backdrop-filter]:bg-zinc-900/60">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl">Welcome back</CardTitle>
+            <CardDescription className="text-zinc-400">
+              Sign in to the Dali client console and see what your agents did
+              today.
+            </CardDescription>
+          </CardHeader>
 
-            <div className="p-8 pt-0 grid gap-5">
-              {error && (
-                <div className="bg-red-950/50 border border-red-900/50 text-red-400 px-4 py-3 rounded-md text-sm font-medium">
-                  {error === 'true' ? 'Email atau Password salah.' : error}
-                </div>
-              )}
-
-              {isRegister && (
-                <div className="grid gap-2">
-                  <label htmlFor="name" className="text-sm font-medium leading-none text-zinc-300">Nama Lengkap</label>
-                  <div className="relative flex items-center w-full">
-                    <div className="absolute left-3 top-0 bottom-0 flex items-center justify-center pointer-events-none">
-                      <svg className="h-4 w-4 text-zinc-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                    </div>
-                    <input
-                      id="name"
-                      name="name"
-                      type="text"
-                      required
-                      placeholder="Nama Anda"
-                      className="block h-11 w-full rounded-lg border border-zinc-800 bg-zinc-900/50 pl-10 pr-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#F5C518]/50 focus:border-[#F5C518]/50 transition-all"
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div className="grid gap-2">
-                <label htmlFor="email" className="text-sm font-medium leading-none text-zinc-300">Email</label>
-                <div className="relative flex items-center w-full">
-                  <div className="absolute left-3 top-0 bottom-0 flex items-center justify-center pointer-events-none">
-                    <Mail className="h-4 w-4 text-zinc-500" />
-                  </div>
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    required
-                    placeholder="anda@email.com"
-                    className="block h-11 w-full rounded-lg border border-zinc-800 bg-zinc-900/50 pl-10 pr-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#F5C518]/50 focus:border-[#F5C518]/50 transition-all"
-                  />
-                </div>
-              </div>
-
-              <div className="grid gap-2">
-                <label htmlFor="password" className="text-sm font-medium leading-none text-zinc-300">Password</label>
-                <div className="relative flex items-center w-full">
-                  <div className="absolute left-3 top-0 bottom-0 flex items-center justify-center pointer-events-none">
-                    <Lock className="h-4 w-4 text-zinc-500" />
-                  </div>
-                  <input
-                    id="password"
-                    name="password"
-                    type={showPassword ? "text" : "password"}
-                    required
-                    placeholder="••••••••"
-                    className="block h-11 w-full rounded-lg border border-zinc-800 bg-zinc-900/50 pl-10 pr-10 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#F5C518]/50 focus:border-[#F5C518]/50 transition-all"
-                  />
-                  <button
-                    type="button"
-                    aria-label={showPassword ? "Sembunyikan password" : "Lihat password"}
-                    className="absolute right-2 top-0 bottom-0 my-auto h-9 w-9 flex items-center justify-center p-0 rounded-md text-zinc-400 hover:text-zinc-100 transition-colors"
-                    onClick={() => setShowPassword((v) => !v)}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
-
-              {!isRegister && (
-                <div className="flex items-center justify-between mt-1">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="remember"
-                      name="remember"
-                      className="h-4 w-4 rounded border-zinc-700 bg-zinc-900 text-[#F5C518] focus:ring-[#F5C518] focus:ring-offset-zinc-950"
-                    />
-                    <label htmlFor="remember" className="text-sm text-zinc-400 cursor-pointer">
-                      Ingat saya
-                    </label>
-                  </div>
-                  <a href="#" className="text-sm text-zinc-400 hover:text-zinc-200 transition-colors">
-                    Lupa password?
-                  </a>
-                </div>
-              )}
-
-              <button type="submit" className="w-full h-11 mt-4 rounded-lg bg-[#F5C518] text-black font-bold text-sm hover:bg-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 focus:ring-offset-zinc-950 transition-all">
-                {isRegister ? "Daftar Sekarang" : "Masuk"}
-              </button>
-            </div>
-
-            <div className="p-6 pt-0 mt-auto bg-zinc-950/30 border-t border-zinc-800/50 flex flex-col items-center gap-3 text-sm text-zinc-400">
-              <div className="mt-4">
-                {isRegister ? "Sudah punya akun?" : "Belum punya akun?"}
-                <Link className="ml-2 text-zinc-200 hover:text-[#F5C518] font-semibold transition-colors" href={isRegister ? "/login" : "/register"}>
-                  {isRegister ? "Masuk di sini" : "Daftar di sini"}
-                </Link>
+          <CardContent className="grid gap-5">
+            <div className="grid gap-2">
+              <Label htmlFor="email" className="text-zinc-300">
+                Email
+              </Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@company.com"
+                  className="pl-10 bg-zinc-950 border-zinc-800 text-zinc-50 placeholder:text-zinc-600"
+                />
               </div>
             </div>
 
-          </div>
-        </form>
+            <div className="grid gap-2">
+              <Label htmlFor="password" className="text-zinc-300">
+                Password
+              </Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  className="pl-10 pr-10 bg-zinc-950 border-zinc-800 text-zinc-50 placeholder:text-zinc-600"
+                />
+                <button
+                  type="button"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-md text-zinc-400 hover:text-zinc-200"
+                  onClick={() => setShowPassword((v) => !v)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="remember"
+                  className="border-zinc-700 data-[state=checked]:bg-zinc-50 data-[state=checked]:text-zinc-900"
+                />
+                <Label htmlFor="remember" className="text-zinc-400">
+                  Remember me
+                </Label>
+              </div>
+              <a href="#" className="text-sm text-zinc-300 hover:text-zinc-100">
+                Forgot password?
+              </a>
+            </div>
+
+            <Button className="w-full h-10 rounded-lg bg-zinc-50 text-zinc-900 hover:bg-zinc-200">
+              Sign in
+            </Button>
+
+            <div className="relative">
+              <Separator className="bg-zinc-800" />
+              <span className="absolute left-1/2 -translate-x-1/2 -top-3 bg-zinc-900/70 px-2 text-[11px] uppercase tracking-widest text-zinc-500">
+                or
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                variant="outline"
+                className="h-10 rounded-lg border-zinc-800 bg-zinc-950 text-zinc-50 hover:bg-zinc-900/80"
+              >
+                <Github className="h-4 w-4 mr-2" />
+                GitHub
+              </Button>
+              <Button
+                variant="outline"
+                className="h-10 rounded-lg border-zinc-800 bg-zinc-950 text-zinc-50 hover:bg-zinc-900/80"
+              >
+                <Chrome className="h-4 w-4 mr-2" />
+                Google
+              </Button>
+            </div>
+          </CardContent>
+
+          <CardFooter className="flex flex-col items-center gap-3 text-sm text-zinc-400">
+            <div>
+              New to Dali?
+              <a className="ml-1 text-zinc-200 hover:underline" href="#">
+                Start with one agent
+              </a>
+            </div>
+            <a
+              href="https://daliagents.com"
+              target="_blank"
+              rel="noreferrer"
+              className="text-[10px] tracking-wide text-zinc-600 transition-colors hover:text-zinc-400"
+            >
+              daliagents.com
+            </a>
+          </CardFooter>
+        </Card>
       </div>
     </section>
   );
 }
-
-
