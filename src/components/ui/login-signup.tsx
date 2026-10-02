@@ -68,7 +68,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
       <div className="h-full w-full grid place-items-center px-4 relative z-10">
         <form action={isRegister ? "/api/auth/register" : "/api/auth/login"} method="POST" className="w-full max-w-md">
           <Card className="card-animate w-full border-zinc-800 bg-zinc-950/80 backdrop-blur-xl shadow-2xl">
-            <CardHeader className="space-y-4 text-center" style={{ paddingTop: "32px", paddingBottom: "48px" }}>
+            <CardHeader className="space-y-4 text-center" style={{ paddingTop: "24px", paddingBottom: "0px" }}>
               <div className="flex justify-center items-center gap-3" style={{ marginBottom: "20px" }}>
                 <img 
                   src="/images/logo.png" 
@@ -82,7 +82,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
               </CardTitle>
             </CardHeader>
 
-            <CardContent className="grid gap-5 pt-4 pb-4">
+            <CardContent className="grid gap-[18px] pb-4" style={{ paddingTop: "8px" }}>
               {error && (
                 <div className="bg-red-950/50 border border-red-900/50 text-red-400 px-4 py-3 rounded-md text-sm font-medium">
                   {error === 'true' ? 'Email atau Password salah.' : error}
@@ -175,6 +175,8 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
     </section>
   );
 }
+
+
 
 
 
