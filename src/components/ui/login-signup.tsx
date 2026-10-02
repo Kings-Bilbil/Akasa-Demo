@@ -180,7 +180,7 @@ export default function LoginCardSection() {
                   id="email"
                   type="email"
                   placeholder="you@company.com"
-                  className="pl-10 bg-zinc-950 border-zinc-800 text-zinc-50 placeholder:text-zinc-600"
+                  className="!pl-10 bg-zinc-950 border-zinc-800 text-zinc-50 placeholder:text-zinc-600"
                 />
               </div>
             </div>
@@ -195,7 +195,7 @@ export default function LoginCardSection() {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  className="pl-10 pr-10 bg-zinc-950 border-zinc-800 text-zinc-50 placeholder:text-zinc-600"
+                  className="!pl-10 !pr-10 bg-zinc-950 border-zinc-800 text-zinc-50 placeholder:text-zinc-600"
                 />
                 <button
                   type="button"
@@ -277,4 +277,6 @@ export default function LoginCardSection() {
     </section>
   );
 }
+
+
 
