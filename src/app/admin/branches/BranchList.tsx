@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
+import { saveBranchMapsAction } from './actions';
 
 type BranchInfo = {
   mapUrl?: string;
@@ -37,7 +38,6 @@ export default function BranchList({ branches, initialData }: { branches: any[],
   const handleSave = async () => {
     setLoading(true);
     try {
-      const { saveBranchMapsAction } = await import("./actions");
       await saveBranchMapsAction(data);
       alert("Pengaturan cabang berhasil disimpan!");
     } catch (err: any) {
@@ -126,4 +126,5 @@ export default function BranchList({ branches, initialData }: { branches: any[],
     </div>
   );
 }
+
 
