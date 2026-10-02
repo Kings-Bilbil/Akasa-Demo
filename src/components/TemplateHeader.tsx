@@ -61,6 +61,11 @@ export default function TemplateHeader() {
 
   return (
     <>
+      {isLoading && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 999999, backgroundColor: "#000000", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <LoadingSpinner />
+        </div>
+      )}
       <style>{`
         .azu-spinner {
           position: absolute;
@@ -179,6 +184,9 @@ export default function TemplateHeader() {
     </>
   );
 }
+
+
+
 
 
 
