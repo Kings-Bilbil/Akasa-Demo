@@ -49,14 +49,9 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
 
       {/* Back Button (Top Left) */}
       <div className="absolute top-8 left-8 z-20">
-        <Link href="/">
-          <button 
-            type="button" 
-            className="flex items-center gap-3 text-zinc-100 hover:text-white font-semibold transition-colors cursor-pointer"
-          >
-            <ArrowLeft className="h-6 w-6" strokeWidth={2.5} />
-            <span className="text-lg tracking-wide">Kembali ke Beranda</span>
-          </button>
+        <Link href="/" className="flex items-center gap-2 text-white hover:text-zinc-300 font-semibold transition-colors cursor-pointer">
+          <ArrowLeft className="h-5 w-5" strokeWidth={2.5} />
+          <span className="text-base tracking-wide">Kembali ke Beranda</span>
         </Link>
       </div>
 
@@ -69,7 +64,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
                 <img 
                   src="/images/logo.png" 
                   alt="Azuraya Logo" 
-                  className="h-5 object-contain drop-shadow-md"
+                  className="object-contain drop-shadow-md" style={{ height: "30px", width: "auto" }}
                 />
               </div>
               <CardTitle className="text-2xl font-bold text-zinc-100 tracking-tight">
@@ -86,7 +81,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
 
               {isRegister && (
                 <div className="grid gap-2">
-                  <Label htmlFor="name" className="text-zinc-300 font-medium ml-8">
+                  <Label htmlFor="name" className="text-zinc-300 font-medium" style={{ paddingLeft: "40px" }}>
                     Nama Lengkap
                   </Label>
                   <div className="relative flex items-center w-full">
@@ -104,7 +99,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
               )}
 
               <div className="grid gap-2">
-                <Label htmlFor="email" className="text-zinc-300 font-medium ml-8">
+                <Label htmlFor="email" className="text-zinc-300 font-medium" style={{ paddingLeft: "40px" }}>
                   Email
                 </Label>
                 <div className="relative flex items-center w-full">
@@ -121,7 +116,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="password" className="text-zinc-300 font-medium ml-8">
+                <Label htmlFor="password" className="text-zinc-300 font-medium" style={{ paddingLeft: "40px" }}>
                   Password
                 </Label>
                 <div className="relative flex items-center w-full">
@@ -170,5 +165,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
     </section>
   );
 }
+
+
 
 
