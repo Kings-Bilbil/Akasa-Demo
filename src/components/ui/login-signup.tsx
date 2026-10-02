@@ -69,7 +69,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
         <form action={isRegister ? "/api/auth/register" : "/api/auth/login"} method="POST" className="w-full max-w-md">
           <Card className="card-animate w-full border-zinc-800 bg-zinc-950/80 backdrop-blur-xl shadow-2xl">
             <CardHeader className="space-y-4 text-center" style={{ paddingTop: "32px", paddingBottom: "48px" }}>
-              <div className="flex justify-center items-center gap-3" style={{ marginBottom: "40px" }}>
+              <div className="flex justify-center items-center gap-3" style={{ marginBottom: "20px" }}>
                 <img 
                   src="/images/logo.png" 
                   alt="Azuraya Logo" 
@@ -156,12 +156,12 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
 
 
 
-              <Button type="submit" className="w-full h-12 rounded-lg bg-[#F5C518] text-black font-bold hover:bg-yellow-400 transition-colors text-base cursor-pointer" style={{ marginTop: "40px", marginBottom: "20px" }}>
+              <Button type="submit" className="w-full h-12 rounded-lg bg-[#F5C518] text-black font-bold hover:bg-yellow-400 transition-colors text-base cursor-pointer" style={{ marginTop: "24px", marginBottom: "0px" }}>
                 {isRegister ? "Daftar Sekarang" : "Masuk"}
               </Button>
             </CardContent>
 
-            <CardFooter className="flex flex-col items-center gap-3 pt-8 text-base text-zinc-400" style={{ paddingBottom: "40px" }}>
+            <CardFooter className="flex flex-col items-center gap-3 pt-4 text-base text-zinc-400" style={{ paddingBottom: "24px" }}>
               <div>
                 {isRegister ? "Sudah punya akun?" : "Belum punya akun?"}
                 <Link className="ml-2 font-bold text-zinc-200 hover:text-[#F5C518] transition-colors" href={isRegister ? "/login" : "/register"}>
@@ -175,6 +175,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
     </section>
   );
 }
+
 
 
 
