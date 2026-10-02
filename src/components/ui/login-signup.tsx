@@ -12,7 +12,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Eye,
   EyeOff,
@@ -21,7 +20,6 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 
 export default function LoginCardSection({ error, isRegister = false }: { error?: string, isRegister?: boolean }) {
   const [showPassword, setShowPassword] = useState(false);
@@ -49,32 +47,29 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
         <div className="flash-light flash-light--right" />
       </div>
 
-      {/* Header */}
-      <header className="absolute left-0 right-0 top-0 flex items-center justify-between px-6 py-4 border-b border-zinc-800/80 z-20 bg-black/50 backdrop-blur-md">
-        <span className="text-sm font-bold tracking-[0.15em] uppercase text-[#F5C518]">
-          AZURAYA GRUP
-        </span>
+      {/* Back Button (Top Left) */}
+      <div className="absolute top-6 left-6 z-20">
         <Link href="/">
-          <Button
-            variant="outline"
-            className="h-9 rounded-lg border-zinc-800 bg-zinc-900 text-zinc-50 hover:bg-zinc-800 cursor-pointer"
+          <button 
+            type="button" 
+            className="p-2 rounded-full border border-zinc-800 bg-zinc-950/80 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 transition-all shadow-md cursor-pointer flex items-center justify-center"
+            title="Kembali ke Beranda"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            <span className="font-medium">Kembali ke Beranda</span>
-          </Button>
+            <ArrowLeft className="h-5 w-5" />
+          </button>
         </Link>
-      </header>
+      </div>
 
       {/* Centered Login Card */}
-      <div className="h-full w-full grid place-items-center px-4 relative z-10 pt-12">
+      <div className="h-full w-full grid place-items-center px-4 relative z-10">
         <form action={isRegister ? "/api/auth/register" : "/api/auth/login"} method="POST" className="w-full max-w-md">
           <Card className="card-animate w-full border-zinc-800 bg-zinc-950/80 backdrop-blur-xl shadow-2xl">
             <CardHeader className="space-y-4 text-center pb-2">
-              <div className="flex justify-center mb-2">
+              <div className="flex justify-center mb-1">
                 <img 
                   src="/images/logo.png" 
                   alt="Azuraya Logo" 
-                  className="h-14 object-contain drop-shadow-md"
+                  className="h-8 object-contain drop-shadow-md"
                 />
               </div>
               <CardTitle className="text-2xl font-bold text-zinc-100 tracking-tight">
@@ -91,7 +86,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
 
               {isRegister && (
                 <div className="grid gap-2">
-                  <Label htmlFor="name" className="text-zinc-300 font-medium">
+                  <Label htmlFor="name" className="text-zinc-300 font-medium ml-2">
                     Nama Lengkap
                   </Label>
                   <div className="relative flex items-center w-full">
@@ -109,7 +104,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
               )}
 
               <div className="grid gap-2">
-                <Label htmlFor="email" className="text-zinc-300 font-medium">
+                <Label htmlFor="email" className="text-zinc-300 font-medium ml-2">
                   Email
                 </Label>
                 <div className="relative flex items-center w-full">
@@ -126,7 +121,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="password" className="text-zinc-300 font-medium">
+                <Label htmlFor="password" className="text-zinc-300 font-medium ml-2">
                   Password
                 </Label>
                 <div className="relative flex items-center w-full">
@@ -142,7 +137,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
                   <button
                     type="button"
                     aria-label={showPassword ? "Sembunyikan password" : "Lihat password"}
-                    className="absolute right-2 p-2 rounded-md text-zinc-400 hover:text-zinc-200 transition-colors"
+                    className="absolute right-2 p-2 rounded-md text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
                     onClick={() => setShowPassword((v) => !v)}
                   >
                     {showPassword ? (
@@ -155,32 +150,22 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
               </div>
 
               {!isRegister && (
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      id="remember"
-                      name="remember"
-                      className="border-zinc-700 data-[state=checked]:bg-[#F5C518] data-[state=checked]:text-black"
-                    />
-                    <Label htmlFor="remember" className="text-zinc-400 font-normal cursor-pointer">
-                      Ingat saya
-                    </Label>
-                  </div>
+                <div className="flex justify-end mt-1">
                   <a href="#" className="text-sm font-medium text-zinc-400 hover:text-zinc-200 transition-colors">
                     Lupa password?
                   </a>
                 </div>
               )}
 
-              <Button type="submit" className="w-full h-11 mt-2 rounded-lg bg-[#F5C518] text-black font-bold hover:bg-yellow-400 transition-colors text-base">
+              <Button type="submit" className="w-full h-11 mt-3 rounded-lg bg-[#F5C518] text-black font-bold hover:bg-yellow-400 transition-colors text-base cursor-pointer">
                 {isRegister ? "Daftar Sekarang" : "Masuk"}
               </Button>
             </CardContent>
 
-            <CardFooter className="flex flex-col items-center gap-3 pb-8 text-sm text-zinc-400">
-              <div className="mt-2">
+            <CardFooter className="flex flex-col items-center gap-3 pb-12 pt-2 text-base text-zinc-400">
+              <div>
                 {isRegister ? "Sudah punya akun?" : "Belum punya akun?"}
-                <Link className="ml-2 font-semibold text-zinc-200 hover:text-[#F5C518] transition-colors" href={isRegister ? "/login" : "/register"}>
+                <Link className="ml-2 font-bold text-zinc-200 hover:text-[#F5C518] transition-colors" href={isRegister ? "/login" : "/register"}>
                   {isRegister ? "Masuk di sini" : "Daftar di sini"}
                 </Link>
               </div>
