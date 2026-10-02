@@ -69,7 +69,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
         <form action={isRegister ? "/api/auth/register" : "/api/auth/login"} method="POST" className="w-full max-w-md">
           <Card className="card-animate w-full border-zinc-800 bg-zinc-950/80 backdrop-blur-xl shadow-2xl">
             <CardHeader className="space-y-4 text-center" style={{ paddingTop: "32px", paddingBottom: "48px" }}>
-              <div className="flex justify-center items-center gap-3 mb-1">
+              <div className="flex justify-center items-center gap-3" style={{ marginBottom: "40px" }}>
                 <img 
                   src="/images/logo.png" 
                   alt="Azuraya Logo" 
@@ -175,6 +175,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
     </section>
   );
 }
+
 
 
 
