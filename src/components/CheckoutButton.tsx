@@ -6,7 +6,7 @@ import Popup from '@/components/Popup';
 export default function CheckoutButton({ product, branches, customerId }: { product: any, branches: any[], customerId: string }) {
   const [loading, setLoading] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState(branches.find(b => b.stock === undefined || b.stock > 0)?.id || '');
-  const [popupData, setPopupData] = useState<{message: string, type: 'success' | 'error'} | null>(null);
+  const [popupData, setPopupData] = useState<{message: string, type: 'success' | 'error', title?: string, actionUrl?: string, actionText?: string, actionIcon?: React.ReactNode} | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -43,7 +43,7 @@ export default function CheckoutButton({ product, branches, customerId }: { prod
       
       (window as any).snap.pay(data.token, {
         onSuccess: function(result: any) {
-          setPopupData({ message: 'Pembayaran berhasil! Silakan ambil barang Anda di cabang yang dipilih.', type: 'success' });
+          setPopupData({ message: 'Pembayaran berhasil! Silakan ambil barang Anda di cabang yang dipilih.', type: 'success', title: 'Pembayaran Berhasil!', actionUrl: '/dashboard', actionText: 'Unduh Bukti Pembayaran', actionIcon: <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> });
         },
         onPending: function(result: any) {
           setPopupData({ message: 'Menunggu pembayaran Anda.', type: 'success' });
@@ -131,10 +131,15 @@ export default function CheckoutButton({ product, branches, customerId }: { prod
         <Popup 
           message={popupData.message} 
           type={popupData.type} 
+          title={popupData.title}
+          actionUrl={popupData.actionUrl}
+          actionText={popupData.actionText}
+          actionIcon={popupData.actionIcon}
           onClose={() => setPopupData(null)} 
         />
       )}
     </>
   );
 }
+
 

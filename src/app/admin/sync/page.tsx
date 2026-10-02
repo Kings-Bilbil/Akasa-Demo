@@ -28,7 +28,7 @@ export default function AdminSyncPage() {
       const res = await fetch('/api/sync', { method: 'POST' });
       const data = await res.json();
       if (res.ok) {
-        const successMsg = `Sukses! Berhasil menarik ${data.syncedBranches} cabang & ${data.syncedProducts} produk dari Accurate.`;
+        const successMsg = data.message || "Berhasil menarik data dari Accurate.";
         setMessage(successMsg);
         setPopupData({ message: successMsg, type: 'success' });
       } else {
@@ -83,3 +83,4 @@ export default function AdminSyncPage() {
     </div>
   )
 }
+
