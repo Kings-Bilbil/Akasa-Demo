@@ -3,8 +3,12 @@ import Link from 'next/link';
 import TemplateHeader from '@/components/TemplateHeader';
 import TestimonialCarousel from '@/components/TestimonialCarousel';
 
+import { redirect } from 'next/navigation';
+
 export default async function Home() {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
   const { data: gmapsData } = await supabase.from('web_settings').select('value').eq('key', 'gmaps_iframe_url').single();
   const gmapsUrl = gmapsData?.value || "https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d1020084.7176140683!2d109.19199321307527!3d0.32924157053039146!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sid!4v1716382023912!5m2!1sen!2sid";
 
@@ -486,3 +490,6 @@ export default async function Home() {
 </>
 );
 }
+
+
+

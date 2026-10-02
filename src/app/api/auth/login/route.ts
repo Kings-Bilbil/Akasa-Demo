@@ -13,5 +13,10 @@ export async function POST(request: Request) {
     return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error.message)}`, request.url));
   }
   
+  if (email === 'admin@azuraya.com') {
+    return NextResponse.redirect(new URL('/admin', request.url));
+  }
+  
   return NextResponse.redirect(new URL('/', request.url));
 }
+

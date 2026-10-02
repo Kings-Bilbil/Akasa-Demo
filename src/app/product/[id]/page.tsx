@@ -12,9 +12,7 @@ export default async function ProductDetail({ params }: { params: Promise<{ id: 
   
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (user?.email === 'admin@azuraya.com') {
-    redirect('/admin');
-  }
+
   
   const { data: product, error } = await supabase
     .from('products_cache')
@@ -141,6 +139,7 @@ export default async function ProductDetail({ params }: { params: Promise<{ id: 
     </>
   );
 }
+
 
 
 

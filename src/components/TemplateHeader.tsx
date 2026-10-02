@@ -74,19 +74,23 @@ export default function TemplateHeader() {
             </>
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <div style={{ position: 'relative', width: '48px', height: '48px', backgroundColor: '#F6F4F0', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
-                <span style={{ position: 'absolute', top: '-4px', right: '-4px', backgroundColor: '#F5C518', color: '#fff', fontSize: '12px', fontWeight: 'bold', width: '22px', height: '22px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>3</span>
-              </div>
-              
-              <div style={{ position: 'relative', width: '48px', height: '48px', backgroundColor: '#F5C518', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-                <span style={{ position: 'absolute', top: '2px', right: '4px', backgroundColor: '#E74C3C', width: '12px', height: '12px', borderRadius: '50%', border: '2px solid #fff' }}></span>
-              </div>
+              {user.email !== "admin@azuraya.com" && (
+                <>
+                  <div style={{ position: "relative", width: "48px", height: "48px", backgroundColor: "#F6F4F0", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                    <span style={{ position: "absolute", top: "-4px", right: "-4px", backgroundColor: "#F5C518", color: "#fff", fontSize: "12px", fontWeight: "bold", width: "22px", height: "22px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>3</span>
+                  </div>
+                  
+                  <div style={{ position: "relative", width: "48px", height: "48px", backgroundColor: "#F5C518", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                    <span style={{ position: "absolute", top: "2px", right: "4px", backgroundColor: "#E74C3C", width: "12px", height: "12px", borderRadius: "50%", border: "2px solid #fff" }}></span>
+                  </div>
+                </>
+              )}
 
-              <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: '8px', textDecoration: 'none' }}>
-                <img src="/images/user-profile.jpg" alt="Profile" style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover' }} onError={(e) => { e.currentTarget.src = "https://ui-avatars.com/api/?name=" + user.fullName + "&background=F5C518&color=000"; }} />
-                <span style={{ color: '#F5C518', fontWeight: 'bold', fontSize: '18px', fontFamily: 'var(--font-primary)' }}>{user.fullName.split(' ')[0]}</span>
+              <Link href={user.email === "admin@azuraya.com" ? "/admin" : "/dashboard"} style={{ display: "flex", alignItems: "center", gap: "12px", marginLeft: "8px", textDecoration: "none" }}>
+                <img src="/images/user-profile.jpg" alt="Profile" style={{ width: "48px", height: "48px", borderRadius: "50%", objectFit: "cover" }} onError={(e) => { e.currentTarget.src = "https://ui-avatars.com/api/?name=" + (user.email === "admin@azuraya.com" ? "Admin" : user.fullName) + "&background=F5C518&color=000"; }} />
+                <span style={{ color: "#F5C518", fontWeight: "bold", fontSize: "18px", fontFamily: "var(--font-primary)" }}>{user.email === "admin@azuraya.com" ? "Admin" : user.fullName.split(" ")[0]}</span>
               </Link>
             </div>
           )}
@@ -117,7 +121,9 @@ export default function TemplateHeader() {
                 <Link href="/register" className="header__btn header__btn--daftar w-full text-center">Daftar</Link>
               </>
             ) : (
-              <Link href="/dashboard" className="header__btn header__btn--daftar w-full text-center">Dashboard</Link>
+              <Link href={user.email === "admin@azuraya.com" ? "/admin" : "/dashboard"} className="header__btn header__btn--daftar w-full text-center">
+                {user.email === "admin@azuraya.com" ? "Admin Panel" : "Dashboard"}
+              </Link>
             )}
           </div>
         </div>
@@ -125,3 +131,4 @@ export default function TemplateHeader() {
     </header>
   );
 }
+
