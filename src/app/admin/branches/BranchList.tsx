@@ -36,20 +36,12 @@ export default function BranchList({ branches, initialData }: { branches: any[],
 
   const handleSave = async () => {
     setLoading(true);
-    const { data: existing } = await supabase.from('web_settings').select('*').eq('key', 'branch_maps').single();
-    let error;
-    if (existing) {
-      const { error: updateError } = await supabase.from('web_settings').update({ value: JSON.stringify(data) }).eq('key', 'branch_maps');
-      error = updateError;
-    } else {
-      const { error: insertError } = await supabase.from('web_settings').insert({ key: 'branch_maps', value: JSON.stringify(data) });
-      error = insertError;
-    }
-      
-    if (error) {
-      alert('Gagal menyimpan: ' + error.message);
-    } else {
-      alert('Pengaturan cabang berhasil disimpan!');
+    try {
+      const { saveBranchMapsAction } = await import("./actions");
+      await saveBranchMapsAction(data);
+      alert("Pengaturan cabang berhasil disimpan!");
+    } catch (err: any) {
+      alert("Gagal menyimpan: " + err.message);
     }
     setLoading(false);
   };
@@ -134,3 +126,4 @@ export default function BranchList({ branches, initialData }: { branches: any[],
     </div>
   );
 }
+
