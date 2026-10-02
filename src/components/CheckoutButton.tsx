@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import Popup from '@/components/Popup';
 
-export default function CheckoutButton({ product, branches, customerId }: { product: any, branches: any[], customerId: string }) {
+export default function CheckoutButton({ product, branches, customerId, canCheckout = true, checkoutMessage }: { product: any, branches: any[], customerId?: string, canCheckout?: boolean, checkoutMessage?: React.ReactNode }) {
   const [loading, setLoading] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState(branches.find(b => b.stock === undefined || b.stock > 0)?.id || '');
   const [popupData, setPopupData] = useState<{message: string, type: 'success' | 'error', title?: string, actionUrl?: string, actionText?: string, actionIcon?: React.ReactNode} | null>(null);
@@ -95,37 +95,43 @@ export default function CheckoutButton({ product, branches, customerId }: { prod
         </div>
       </div>
       
-      <div className="product-detail__add-to-cart-row mt-6 flex gap-4">
-        <div className="quantity-selector flex items-center justify-between" style={{ backgroundColor: '#1A1C23', borderRadius: '100px', padding: '0 12px', width: '120px', height: '56px' }}>
-          <button 
-            className="qty-btn qty-btn--minus text-white text-xl font-bold" 
-            onClick={() => setQuantity(Math.max(1, quantity - 1))}
-            style={{ width: '32px', height: '32px' }}
-          >-</button>
-          <span className="qty-value text-gold font-bold text-lg" style={{ color: 'var(--color-gold)' }}>{quantity}</span>
-          <button 
-            className="qty-btn qty-btn--plus text-white text-xl font-bold"
-            onClick={() => setQuantity(Math.min(maxStock, quantity + 1))}
-            disabled={quantity >= maxStock}
-            style={{ width: '32px', height: '32px' }}
-          >+</button>
-        </div>
+      {canCheckout ? (
+        <>
+          <div className="product-detail__add-to-cart-row mt-6 flex gap-4">
+            <div className="quantity-selector flex items-center justify-between" style={{ backgroundColor: "#1A1C23", borderRadius: "100px", padding: "0 12px", width: "120px", height: "56px" }}>
+              <button 
+                className="qty-btn qty-btn--minus text-white text-xl font-bold" 
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                style={{ width: "32px", height: "32px" }}
+              >-</button>
+              <span className="qty-value text-gold font-bold text-lg" style={{ color: "var(--color-gold)" }}>{quantity}</span>
+              <button 
+                className="qty-btn qty-btn--plus text-white text-xl font-bold"
+                onClick={() => setQuantity(Math.min(maxStock, quantity + 1))}
+                disabled={quantity >= maxStock}
+                style={{ width: "32px", height: "32px" }}
+              >+</button>
+            </div>
 
-        <button 
-          onClick={handleCheckout}
-          disabled={loading || !selectedBranch || maxStock === 0}
-          className="btn-primary btn-cart flex-grow flex justify-center items-center gap-2"
-          style={{ backgroundColor: 'var(--color-gold)', color: '#000', borderRadius: '100px', height: '56px', fontSize: '16px', fontWeight: 'bold', border: 'none' }}
-        >
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
-          {loading ? 'Memproses...' : 'Add To Cart'}
-        </button>
-      </div>
+            <button 
+              onClick={handleCheckout}
+              disabled={loading || !selectedBranch || maxStock === 0}
+              className="btn-primary btn-cart flex-grow flex justify-center items-center gap-2"
+              style={{ backgroundColor: "var(--color-gold)", color: "#000", borderRadius: "100px", height: "56px", fontSize: "16px", fontWeight: "bold", border: "none" }}
+            >
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+              {loading ? "Memproses..." : "Add To Cart"}
+            </button>
+          </div>
 
-      <button onClick={handleCheckout} disabled={loading || !selectedBranch || maxStock === 0} className="btn-primary btn-summary w-full mt-4 flex flex-col justify-center items-center cursor-pointer disabled:opacity-50" style={{backgroundColor: 'var(--color-gold)', color: '#000', borderRadius: '100px', height: '64px', border: 'none', fontWeight: '700', fontSize: '14px', lineHeight: '1.2'}}>
-        <span>{quantity} Produk</span>
-        <span>Rp {(product.price * quantity).toLocaleString('id-ID')}</span>
-      </button>
+          <button onClick={handleCheckout} disabled={loading || !selectedBranch || maxStock === 0} className="btn-primary btn-summary w-full mt-4 flex flex-col justify-center items-center cursor-pointer disabled:opacity-50" style={{backgroundColor: "var(--color-gold)", color: "#000", borderRadius: "100px", height: "64px", border: "none", fontWeight: "700", fontSize: "14px", lineHeight: "1.2"}}>
+            <span>{quantity} Produk</span>
+            <span>Rp {(product.price * quantity).toLocaleString("id-ID")}</span>
+          </button>
+        </>
+      ) : (
+        <div className="mt-8">{checkoutMessage}</div>
+      )}
 
       {popupData && (
         <Popup 
@@ -141,5 +147,6 @@ export default function CheckoutButton({ product, branches, customerId }: { prod
     </>
   );
 }
+
 
 

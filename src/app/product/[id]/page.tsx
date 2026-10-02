@@ -108,19 +108,31 @@ export default async function ProductDetail({ params }: { params: Promise<{ id: 
             
             <hr className="product-detail__divider" />
             
-            {user ? ( user.email === 'admin@azuraya.com' ? ( <div className="mt-8 p-6 rounded-2xl text-center" style={{ backgroundColor: "#1A1C23", border: "1px solid rgba(245, 197, 24, 0.2)" }}> <h3 className="font-bold mb-2" style={{ color: "var(--color-gold)" }}>Mode Admin Aktif</h3> <p className="text-gray-400 text-sm">Sebagai admin, Anda hanya dapat melihat detail produk, tetapi tidak dapat melakukan pesanan.</p> <Link href="/admin" className="mt-6 inline-flex justify-center items-center font-bold transition-opacity hover:opacity-90 w-full" style={{ backgroundColor: "var(--color-gold)", color: "#000", borderRadius: "100px", height: "48px" }}>Masuk ke Panel Admin</Link> </div> ) : ( <CheckoutButton product={product} branches={checkoutBranches} customerId={user.id} /> ) ) : (
-               <div className="mt-8 flex flex-col gap-4">
-                <div className="text-center p-6 rounded-2xl" style={{ backgroundColor: '#1A1C23', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <p className="text-gray-400 mb-6 text-sm">Anda harus login untuk melihat stok dan melakukan pesanan.</p>
-                  <Link href="/login" className="w-full flex justify-center items-center font-bold transition-opacity hover:opacity-90" style={{ backgroundColor: 'var(--color-gold)', color: '#000', borderRadius: '100px', height: '56px', fontSize: '16px' }}>
-                    Login Sekarang
-                  </Link>
-                  <p className="mt-6 text-sm text-gray-500">
-                    Belum punya akun? <Link href="/register" className="text-white font-semibold hover:opacity-80 underline underline-offset-4" style={{ color: '#fff' }}>Daftar di sini</Link>
-                  </p>
-                </div>
-              </div>
-            )}
+            
+            <CheckoutButton 
+              product={product} 
+              branches={checkoutBranches} 
+              customerId={user?.id}
+              canCheckout={!!user && user.email !== "admin@azuraya.com"}
+              checkoutMessage={
+                user && user.email === "admin@azuraya.com" ? (
+                  <div className="p-6 rounded-2xl text-center" style={{ backgroundColor: "#1A1C23", border: "1px solid rgba(245, 197, 24, 0.2)" }}>
+                    <h3 className="font-bold mb-2" style={{ color: "var(--color-gold)" }}>Mode Admin Aktif</h3>
+                    <p className="text-gray-400 text-sm">Sebagai admin, Anda dapat mengecek stok produk, tetapi tidak dapat melakukan pesanan.</p>
+                  </div>
+                ) : (
+                  <div className="text-center p-6 rounded-2xl" style={{ backgroundColor: "#1A1C23", border: "1px solid rgba(255,255,255,0.05)" }}>
+                    <p className="text-gray-400 mb-6 text-sm">Anda harus login untuk melakukan pesanan.</p>
+                    <Link href="/login" className="w-full flex justify-center items-center font-bold transition-opacity hover:opacity-90 mt-4" style={{ backgroundColor: "var(--color-gold)", color: "#000", borderRadius: "100px", height: "56px", fontSize: "16px" }}>
+                      Login Sekarang
+                    </Link>
+                    <p className="mt-6 text-sm text-gray-500">
+                      Belum punya akun? <Link href="/register" className="text-white font-semibold hover:opacity-80 underline underline-offset-4">Daftar di sini</Link>
+                    </p>
+                  </div>
+                )
+              }
+            />
             
             <div className="product-detail__delivery-info mt-8">
               <div className="delivery-icon">
@@ -137,6 +149,8 @@ export default async function ProductDetail({ params }: { params: Promise<{ id: 
     </>
   );
 }
+
+
 
 
 
