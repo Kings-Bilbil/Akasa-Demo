@@ -82,7 +82,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
 
               {isRegister && (
                 <div className="grid gap-2">
-                  <Label htmlFor="name" className="text-zinc-300 font-medium ml-1">
+                  <Label htmlFor="name" className="text-zinc-300 font-medium ml-3">
                     Nama Lengkap
                   </Label>
                   <div className="relative flex items-center w-full">
@@ -100,7 +100,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
               )}
 
               <div className="grid gap-2">
-                <Label htmlFor="email" className="text-zinc-300 font-medium ml-1">
+                <Label htmlFor="email" className="text-zinc-300 font-medium ml-3">
                   Email
                 </Label>
                 <div className="relative flex items-center w-full">
@@ -117,7 +117,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="password" className="text-zinc-300 font-medium ml-1">
+                <Label htmlFor="password" className="text-zinc-300 font-medium ml-3">
                   Password
                 </Label>
                 <div className="relative flex items-center w-full">
@@ -166,6 +166,7 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
     </section>
   );
 }
+
 
 
 
