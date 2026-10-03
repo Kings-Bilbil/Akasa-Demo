@@ -37,13 +37,13 @@ const useIsoLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : use
  * - Tema gelap/terang disimpan di localStorage dan hanya berlaku di area ini.
  */
 const AppShell = ({ children, navItems, subtitle, userName, userEmail, fontClassName }: AppShellProps) => {
-  const [isDark, setIsDark] = useState(false)
+  const [isDark, setIsDark] = useState(true)
 
   // Baca preferensi tema tersimpan
   useEffect(() => {
+    // Tema Azuraya: gelap (hitam + emas) adalah default
     const saved = window.localStorage.getItem(THEME_KEY)
     if (saved) setIsDark(saved === 'dark')
-    else setIsDark(window.matchMedia('(prefers-color-scheme: dark)').matches)
   }, [])
 
   // Sinkronkan class ke <html> (untuk portal) dan bersihkan saat keluar dari area admin
@@ -80,10 +80,17 @@ const AppShell = ({ children, navItems, subtitle, userName, userEmail, fontClass
           <Suspense>
             <Sidebar navItems={navItems} subtitle={subtitle} />
           </Suspense>
-          <SidebarInset className='flex min-w-0 flex-1 flex-col'>
+          <SidebarInset className='relative flex min-w-0 flex-1 flex-col overflow-hidden'>
+            {/* Cahaya segitiga khas Azuraya (hanya tampil di tema gelap) */}
+            {isDark && (
+              <div className='pointer-events-none absolute inset-x-0 top-0 z-0 h-161 overflow-hidden opacity-70' aria-hidden>
+                <div className='flash-light flash-light--left' />
+                <div className='flash-light flash-light--right' />
+              </div>
+            )}
             <AdminHeader userName={userName} userEmail={userEmail} isDark={isDark} onToggleTheme={toggleTheme} />
-            <main className='mx-auto size-full max-w-360 flex-1 px-4 py-6 sm:px-6'>{children}</main>
-            <footer className='text-muted-foreground mx-auto w-full max-w-360 px-4 py-3 text-sm sm:px-6'>
+            <div className='relative z-10 mx-auto size-full max-w-360 flex-1 px-4 py-6 sm:px-6'>{children}</div>
+            <footer className='text-muted-foreground relative z-10 mx-auto w-full max-w-360 px-4 py-3 text-sm sm:px-6'>
               &copy; {new Date().getFullYear()} Azuraya Grup
             </footer>
           </SidebarInset>

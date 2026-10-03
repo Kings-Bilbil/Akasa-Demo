@@ -484,9 +484,9 @@ const SidebarLayout = ({ navItems, subtitle = 'Panel' }: SidebarLayoutProps) => 
               className='gap-2.5 bg-transparent! [&>svg]:size-8'
               render={<Link href={`${themeConfig.homePageUrl}`} />}
             >
-              <img src='/images/logo.png' alt={themeConfig.templateName} className='size-8 shrink-0 rounded-md bg-black object-contain p-0.5' />
+              <img src='/images/logo.png' alt={themeConfig.templateName} className='size-9 shrink-0 object-contain drop-shadow-md' />
               <div className='flex flex-col items-start'>
-                <span className='text-lg font-semibold text-nowrap'>{themeConfig.templateName}</span>
+                <span className='text-primary text-lg font-bold tracking-widest text-nowrap uppercase'>{themeConfig.templateName}</span>
                 <span className='text-xs font-light text-nowrap'>{subtitle}</span>
               </div>
             </SidebarMenuButton>
