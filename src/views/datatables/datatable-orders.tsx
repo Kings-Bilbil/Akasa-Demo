@@ -50,7 +50,7 @@ export type OrderRow = {
 
 type Variant = 'admin' | 'user'
 
-type StatusFilter = 'all' | 'paid' | 'pending'
+type StatusFilter = 'all' | 'paid'
 
 const StatusBadge = ({ row }: { row: OrderRow }) => (
   <div className='flex flex-col items-start gap-1'>
@@ -210,8 +210,7 @@ const userColumns: ColumnDef<OrderRow>[] = [
 
 const FILTERS: { key: StatusFilter; label: string }[] = [
   { key: 'all', label: 'Semua' },
-  { key: 'paid', label: 'Lunas' },
-  { key: 'pending', label: 'Menunggu' }
+  { key: 'paid', label: 'Lunas' }
 ]
 
 const OrdersDatatable = ({
@@ -236,7 +235,6 @@ const OrdersDatatable = ({
 
     return data.filter(order => {
       if (statusFilter === 'paid' && !order.isPaid) return false
-      if (statusFilter === 'pending' && order.isPaid) return false
       if (!q) return true
 
       return [order.shortId, order.customerName, order.customerEmail, order.branchName, order.items, order.accurateSo]
