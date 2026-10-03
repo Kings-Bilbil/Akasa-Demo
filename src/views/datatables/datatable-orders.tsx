@@ -13,13 +13,16 @@ import {
 
 import { ReceiptTextIcon, SearchIcon } from 'lucide-react'
 
+import Link from 'next/link'
+
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 import { formatRupiah, formatTanggal } from '@/lib/format'
+import { cn } from '@/lib/utils'
 
 export type OrderRow = {
   id: string
@@ -71,10 +74,15 @@ const RowActions = ({ row }: { row: OrderRow }) => {
   }
   
   return (
-    <Button size='sm' variant='outline' className='whitespace-nowrap' render={<a href={`/invoice/${row.id}`} target='_blank' rel='noreferrer' />}>
+    <Link 
+      href={`/invoice/${row.id}`} 
+      target='_blank' 
+      rel='noreferrer' 
+      className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'whitespace-nowrap')}
+    >
       <ReceiptTextIcon className='mr-2 size-4' aria-hidden='true' />
       Lihat Bukti Pembayaran
-    </Button>
+    </Link>
   )
 }
 
