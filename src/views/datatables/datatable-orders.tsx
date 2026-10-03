@@ -13,8 +13,6 @@ import {
 
 import { ReceiptTextIcon, SearchIcon } from 'lucide-react'
 
-import Link from 'next/link'
-
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
@@ -74,15 +72,13 @@ const RowActions = ({ row }: { row: OrderRow }) => {
   }
   
   return (
-    <Link 
+    <a 
       href={`/invoice/${row.id}`} 
-      target='_blank' 
-      rel='noreferrer' 
       className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'whitespace-nowrap')}
     >
       <ReceiptTextIcon className='mr-2 size-4' aria-hidden='true' />
       Lihat Bukti Pembayaran
-    </Link>
+    </a>
   )
 }
 
