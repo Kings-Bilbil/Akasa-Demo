@@ -1,11 +1,22 @@
-import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { CircleCheckBigIcon, ClockIcon, ShoppingCartIcon, WalletIcon } from 'lucide-react'
+
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+
+import StatisticsCard from '@/views/dashboards/statistics/statistics-card-01'
+import OrdersDatatable, { type OrderRow } from '@/views/datatables/datatable-orders'
+
+import { formatRupiah } from '@/lib/format'
+import { createClient } from '@/utils/supabase/server'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+
   if (!user) {
     redirect('/login')
   }
@@ -20,70 +31,67 @@ export default async function DashboardPage() {
     .eq('customer_id', user.id)
     .order('created_at', { ascending: false })
 
+  const list = (orders ?? []) as any[]
+
+  const rows: OrderRow[] = list.map(order => ({
+    id: order.id,
+    shortId: String(order.id).split('-')[0],
+    createdAt: order.created_at,
+    customerName: '',
+    customerEmail: '',
+    branchName: order.branches_cache?.name || '',
+    isPaid: order.status === 'paid',
+    total: order.total_amount || 0,
+    items: (order.order_items ?? []).map((item: any) => `${item.quantity}x ${item.products_cache?.name ?? 'Produk'}`).join(', ')
+  }))
+
+  const paid = list.filter(order => order.status === 'paid')
+  const totalSpent = paid.reduce((sum, order) => sum + (order.total_amount || 0), 0)
+
   return (
-    <main className="min-h-screen bg-gray-50 py-12 relative">
-      <div className="max-w-6xl mx-auto px-4">
-        <div className="mb-6">
-          <Link href="/" className="text-gray-500 hover:text-gray-800 font-medium transition">&larr; Kembali ke Beranda</Link>
-        </div>
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard Anda</h1>
-          <form action="/api/auth/logout" method="POST">
-            <button className="text-red-600 font-medium hover:underline">Keluar</button>
-          </form>
-        </div>
-        
-        <div className="bg-white rounded-xl shadow p-6 border border-gray-100">
-          <h2 className="text-xl font-bold text-gray-800 mb-6">Riwayat Pesanan</h2>
-          
-          {(!orders || orders.length === 0) ? (
-            <div className="text-center py-10 text-gray-500">
-              Anda belum memiliki riwayat pesanan.
-              <div className="mt-4">
-                <Link href="/" className="bg-blue-600 text-white px-6 py-2 rounded-lg inline-block">Belanja Sekarang</Link>
-              </div>
+    <div className='grid gap-6'>
+      <div className='grid gap-6 sm:grid-cols-2 xl:grid-cols-4'>
+        <StatisticsCard
+          icon={<ShoppingCartIcon className='size-4' />}
+          value={String(list.length)}
+          title='Total Pesanan'
+          description='Semua pesanan Anda'
+        />
+        <StatisticsCard
+          icon={<CircleCheckBigIcon className='size-4' />}
+          value={String(paid.length)}
+          title='Pesanan Lunas'
+          description='Sudah dibayar'
+        />
+        <StatisticsCard
+          icon={<ClockIcon className='size-4' />}
+          value={String(list.length - paid.length)}
+          title='Menunggu Pembayaran'
+          description='Belum dibayar'
+        />
+        <StatisticsCard
+          icon={<WalletIcon className='size-4' />}
+          value={formatRupiah(totalSpent)}
+          title='Total Belanja'
+          description='Dari pesanan yang lunas'
+        />
+      </div>
+
+      <Card className='w-full py-0'>
+        <CardHeader className='border-b pt-6 pb-4'>
+          <CardTitle className='text-lg font-semibold'>Riwayat Pesanan</CardTitle>
+        </CardHeader>
+        <CardContent className='p-0'>
+          {list.length === 0 ? (
+            <div className='text-muted-foreground flex flex-col items-center gap-4 py-16 text-center'>
+              <p>Anda belum memiliki riwayat pesanan.</p>
+              <Button render={<Link href='/produk' />}>Belanja Sekarang</Button>
             </div>
           ) : (
-            <div className="space-y-6">
-              {orders.map((order: any) => (
-                <div key={order.id} className="border rounded-lg p-5 hover:border-blue-300 transition">
-                  <div className="flex justify-between items-start border-b pb-4 mb-4">
-                    <div>
-                      <p className="text-sm text-gray-500 mb-1">Tanggal Pesanan: {new Date(order.created_at).toLocaleDateString('id-ID')}</p>
-                      <p className="font-bold text-gray-900 text-lg">Rp {order.total_amount.toLocaleString('id-ID')}</p>
-                    </div>
-                    <div className="text-right">
-                      <span className={`px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full mb-2 ${
-                        order.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {order.status === 'paid' ? 'Lunas' : 'Menunggu Pembayaran'}
-                      </span>
-                      <br/>
-                      {order.status === 'paid' && (
-                        <Link href={`/invoice/${order.id}`} className="text-blue-600 text-sm hover:underline font-medium" target="_blank">
-                          Download Bukti Bayar / Invoice
-                        </Link>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <p className="text-sm font-bold text-gray-700 mb-2">Item yang Dipesan (Ambil di {order.branches_cache?.name}):</p>
-                    <ul className="space-y-2">
-                      {order.order_items.map((item: any, idx: number) => (
-                        <li key={idx} className="flex justify-between text-sm text-gray-600">
-                          <span>{item.quantity}x {item.products_cache?.name}</span>
-                          <span>Rp {(item.price * item.quantity).toLocaleString('id-ID')}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <OrdersDatatable data={rows} variant='user' pageSize={5} />
           )}
-        </div>
-      </div>
-    </main>
+        </CardContent>
+      </Card>
+    </div>
   )
 }

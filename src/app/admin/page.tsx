@@ -1,88 +1,175 @@
+import { CircleAlertIcon, ClockIcon, ShoppingCartIcon } from 'lucide-react'
+
+import { Card } from '@/components/ui/card'
+
+import CatalogSummaryCard from '@/views/dashboards/widgets/widget-catalog-summary'
+import SalesOverviewCard from '@/views/dashboards/charts/chart-sales-metrics'
+import StatisticsCard from '@/views/dashboards/statistics/statistics-card-01'
+import RankingCard from '@/views/dashboards/widgets/widget-ranking'
+import OrdersDatatable, { type OrderRow } from '@/views/datatables/datatable-orders'
+
+import { formatRupiah, formatRupiahCompact } from '@/lib/format'
 import { createAdminClient } from '@/utils/supabase/admin'
-import { redirect } from 'next/navigation'
-import { createClient } from '@/utils/supabase/server'
+
+const TIME_ZONE = 'Asia/Jakarta'
+
+const dateKey = (date: Date) => new Intl.DateTimeFormat('en-CA', { timeZone: TIME_ZONE }).format(date)
+const monthKey = (date: Date) => dateKey(date).slice(0, 7)
 
 export default async function AdminOrdersPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const adminClient = createAdminClient()
 
-  // Simple admin check based on email for demo purposes
-  if (!user || user.email !== 'admin@azuraya.com') {
-    return (
-      <div className="text-center mt-20">
-        <h1 className="text-2xl font-bold text-red-600 mb-4">Akses Ditolak</h1>
-        <p className="text-gray-700">Halaman ini hanya untuk Admin. Silakan login menggunakan email <strong>admin@azuraya.com</strong>.</p>
-      </div>
-    )
-  }
+  const [{ data: orders }, { count: productCount }, { count: branchCount }] = await Promise.all([
+    adminClient
+      .from('orders')
+      .select('*, customers(full_name, email), branches_cache(name), sync_logs(status, message, action)')
+      .order('created_at', { ascending: false }),
+    adminClient.from('products_cache').select('*', { count: 'exact', head: true }),
+    adminClient.from('branches_cache').select('*', { count: 'exact', head: true })
+  ])
 
-  const adminClient = createAdminClient();
-  const { data: orders } = await adminClient
-    .from('orders')
-    .select('*, customers(full_name, email), branches_cache(name), sync_logs(status, message, action)')
-    .order('created_at', { ascending: false });
+  const list = (orders ?? []) as any[]
+
+  // ---------- Baris tabel ----------
+  const rows: OrderRow[] = list.map(order => {
+    const failedLog = order.sync_logs?.find((log: any) => log.status === 'error')
+
+    return {
+      id: order.id,
+      shortId: String(order.id).split('-')[0],
+      createdAt: order.created_at,
+      customerName: order.customers?.full_name || 'Tanpa Nama',
+      customerEmail: order.customers?.email || '-',
+      branchName: order.branches_cache?.name || '',
+      isPaid: order.status === 'paid',
+      total: order.total_amount || 0,
+      accurateSo: order.accurate_sales_order_id ? String(order.accurate_sales_order_id) : null,
+      syncError: !order.accurate_sales_order_id && failedLog ? failedLog.message || 'Terjadi kesalahan' : null
+    }
+  })
+
+  // ---------- Agregat ----------
+  const paid = list.filter(order => order.status === 'paid')
+  const paidOrders = paid.length
+  const pendingOrders = list.length - paidOrders
+  const totalRevenue = paid.reduce((sum, order) => sum + (order.total_amount || 0), 0)
+  const failedSyncCount = rows.filter(row => row.isPaid && row.syncError).length
+  const uniqueCustomers = new Set(list.map(order => order.customer_id).filter(Boolean)).size
+  const avgOrder = paidOrders === 0 ? 0 : Math.round(totalRevenue / paidOrders)
+
+  // ---------- 5 bulan terakhir ----------
+  const now = new Date()
+  const months = Array.from({ length: 5 }, (_, index) => {
+    const date = new Date(now.getFullYear(), now.getMonth() - (4 - index), 1)
+    return {
+      key: monthKey(new Date(date.getFullYear(), date.getMonth(), 15)),
+      label: date.toLocaleDateString('id-ID', { month: 'short' })
+    }
+  })
+
+  const monthlyOrders = months.map(({ key, label }) => ({
+    month: label,
+    orders: list.filter(order => monthKey(new Date(order.created_at)) === key).length
+  }))
+
+  const monthlyRevenue = months.map(({ key, label }) => ({
+    month: label,
+    revenue: paid
+      .filter(order => monthKey(new Date(order.created_at)) === key)
+      .reduce((sum, order) => sum + (order.total_amount || 0), 0)
+  }))
+
+  // ---------- 24 hari terakhir ----------
+  const dailySales = Array.from({ length: 24 }, (_, index) => {
+    const date = new Date(now.getTime() - (23 - index) * 24 * 60 * 60 * 1000)
+    const key = dateKey(date)
+
+    return {
+      date: date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', timeZone: TIME_ZONE }),
+      sales: paid
+        .filter(order => dateKey(new Date(order.created_at)) === key)
+        .reduce((sum, order) => sum + (order.total_amount || 0), 0)
+    }
+  })
+
+  // ---------- Peringkat cabang ----------
+  const byBranch = new Map<string, { revenue: number; orders: number }>()
+  paid.forEach(order => {
+    const name = order.branches_cache?.name || 'Tanpa Cabang'
+    const current = byBranch.get(name) ?? { revenue: 0, orders: 0 }
+    byBranch.set(name, { revenue: current.revenue + (order.total_amount || 0), orders: current.orders + 1 })
+  })
+
+  const topBranches = [...byBranch.entries()].sort((a, b) => b[1].revenue - a[1].revenue).slice(0, 4)
+  const maxBranchRevenue = topBranches[0]?.[1].revenue || 1
 
   return (
-    <div>
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Daftar Pesanan Masuk</h1>
-      
-      <div className="bg-white rounded-xl shadow overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pelanggan</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cabang</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {orders?.map((order: any) => (
-              <tr key={order.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{order.id.split('-')[0]}...</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(order.created_at).toLocaleDateString('id-ID')}</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">{order.customers?.full_name || 'Tanpa Nama'}</div>
-                  <div className="text-sm text-gray-500">{order.customers?.email}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.branches_cache?.name}</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex flex-col gap-1 items-start">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      order.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {order.status === 'paid' ? 'Lunas / Diproses' : 'Menunggu Pembayaran'}
-                    </span>
-                    {order.status === 'paid' && !order.accurate_sales_order_id && order.sync_logs?.some((log: any) => log.status === 'error') && (
-                      <div className="mt-1 flex flex-col gap-1" title={order.sync_logs.find((log: any) => log.status === 'error')?.message}>
-                        <span className="px-2 inline-flex text-xs leading-5 font-bold rounded bg-red-100 text-red-800 border border-red-200">
-                          Gagal Kirim ke Accurate
-                        </span>
-                        <span className="text-[10px] text-red-600 max-w-[150px] whitespace-normal">
-                          {order.sync_logs.find((log: any) => log.status === 'error')?.message}
-                        </span>
-                      </div>
-                    )}
-                    {order.accurate_sales_order_id && (
-                      <span className="px-2 inline-flex text-xs leading-5 font-medium rounded bg-blue-50 text-blue-700 border border-blue-200">
-                        SO: {order.accurate_sales_order_id}
-                      </span>
-                    )}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-bold">
-                  Rp {order.total_amount.toLocaleString('id-ID')}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {(!orders || orders.length === 0) && (
-          <div className="p-8 text-center text-gray-500">Belum ada pesanan masuk.</div>
-        )}
+    <div className='grid grid-cols-2 gap-6 lg:grid-cols-3'>
+      {/* Kartu statistik */}
+      <div className='col-span-full grid gap-6 sm:grid-cols-3 md:max-lg:grid-cols-1'>
+        <StatisticsCard
+          icon={<ShoppingCartIcon className='size-4' />}
+          value={String(list.length)}
+          title='Total Pesanan'
+          description={`${paidOrders} sudah lunas`}
+        />
+        <StatisticsCard
+          icon={<ClockIcon className='size-4' />}
+          value={String(pendingOrders)}
+          title='Menunggu Pembayaran'
+          description='Belum dibayar oleh pelanggan'
+        />
+        <StatisticsCard
+          icon={<CircleAlertIcon className='size-4' />}
+          value={String(failedSyncCount)}
+          title='Gagal Kirim ke Accurate'
+          description={failedSyncCount === 0 ? 'Semua pesanan lunas sudah tersinkron' : 'Perlu dicek di tabel pesanan'}
+        />
       </div>
+
+      <div className='grid gap-6 max-xl:col-span-full lg:max-xl:grid-cols-2'>
+        <CatalogSummaryCard
+          className='justify-between gap-3 *:data-[slot=card-content]:space-y-5'
+          monthlyOrders={monthlyOrders}
+          monthlyRevenue={monthlyRevenue}
+          totalOrders={list.length}
+          totalRevenueLabel={formatRupiahCompact(totalRevenue)}
+          totalProducts={productCount ?? 0}
+          totalBranches={branchCount ?? 0}
+        />
+
+        <RankingCard
+          className='justify-between gap-5 sm:min-w-0'
+          title='Pendapatan per Cabang'
+          totalLabel={formatRupiah(totalRevenue)}
+          description='Dari pesanan yang sudah lunas'
+          emptyText='Belum ada pesanan lunas.'
+          rows={topBranches.map(([name, value]) => ({
+            name,
+            subtitle: `${value.orders} pesanan`,
+            valueLabel: formatRupiahCompact(value.revenue),
+            progressPercentage: Math.round((value.revenue / maxBranchRevenue) * 100)
+          }))}
+        />
+      </div>
+
+      <SalesOverviewCard
+        className='col-span-full *:data-[slot=card-content]:space-y-6 xl:col-span-2'
+        paidOrders={paidOrders}
+        pendingOrders={pendingOrders}
+        dailySales={dailySales}
+        dailyRangeLabel='24 hari terakhir'
+        metrics={[
+          { icon: 'revenue', title: 'Total pendapatan', value: formatRupiah(totalRevenue) },
+          { icon: 'orders', title: 'Total pesanan', value: String(list.length) },
+          { icon: 'average', title: 'Rata-rata per pesanan', value: formatRupiah(avgOrder) },
+          { icon: 'customers', title: 'Pelanggan', value: String(uniqueCustomers) }
+        ]}
+      />
+
+      <Card className='col-span-full w-full py-0'>
+        <OrdersDatatable data={rows} variant='admin' emptyText='Belum ada pesanan masuk.' />
+      </Card>
     </div>
   )
 }
