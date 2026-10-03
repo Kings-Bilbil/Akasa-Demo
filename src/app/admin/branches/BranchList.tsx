@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
-import { saveBranchMapsAction } from './actions'
+import { saveGlobalMapAction, saveSingleBranchAction } from './actions'
 
 type BranchInfo = {
   mapUrl?: string
@@ -40,7 +40,8 @@ export default function BranchList({
 
   const [data, setData] = useState<Record<string, BranchInfo>>(normalizedInitialData)
   const [globalMap, setGlobalMap] = useState(initialGlobalMap)
-  const [loading, setLoading] = useState(false)
+  const [loadingGlobal, setLoadingGlobal] = useState(false)
+  const [loadingBranches, setLoadingBranches] = useState<Record<string, boolean>>({})
   const [popupData, setPopupData] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
   const handleFieldChange = (branchId: string, field: keyof BranchInfo, value: string) => {
@@ -53,27 +54,32 @@ export default function BranchList({
     }))
   }
 
-  const handleSave = async () => {
-    setLoading(true)
+  const handleSaveGlobal = async () => {
+    setLoadingGlobal(true)
     try {
-      await saveBranchMapsAction(data, globalMap)
-      setPopupData({ message: 'Pengaturan berhasil disimpan!', type: 'success' })
+      await saveGlobalMapAction(globalMap)
+      setPopupData({ message: 'Pengaturan peta global berhasil disimpan!', type: 'success' })
     } catch (err: any) {
       setPopupData({ message: 'Gagal menyimpan: ' + err.message, type: 'error' })
     }
-    setLoading(false)
+    setLoadingGlobal(false)
+  }
+
+  const handleSaveBranch = async (branchId: string) => {
+    setLoadingBranches(prev => ({ ...prev, [branchId]: true }))
+    try {
+      const branchInfo = data[branchId] || {}
+      await saveSingleBranchAction(branchId, branchInfo)
+      setPopupData({ message: 'Pengaturan cabang berhasil disimpan!', type: 'success' })
+    } catch (err: any) {
+      setPopupData({ message: 'Gagal menyimpan: ' + err.message, type: 'error' })
+    }
+    setLoadingBranches(prev => ({ ...prev, [branchId]: false }))
   }
 
   return (
     <div className='space-y-6'>
       {popupData && <Popup message={popupData.message} type={popupData.type} onClose={() => setPopupData(null)} />}
-
-      <div className='flex justify-end'>
-        <Button onClick={handleSave} disabled={loading}>
-          <SaveIcon />
-          {loading ? 'Menyimpan...' : 'Simpan Semua Pengaturan'}
-        </Button>
-      </div>
 
       <Card>
         <CardHeader>
@@ -83,15 +89,23 @@ export default function BranchList({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className='space-y-2'>
-            <Label htmlFor='gmaps_url'>URL Google Maps Iframe (src)</Label>
-            <Input
-              id='gmaps_url'
-              type='url'
-              value={globalMap}
-              onChange={e => setGlobalMap(e.target.value)}
-              placeholder='https://www.google.com/maps/embed?pb=...'
-            />
+          <div className='space-y-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='gmaps_url'>URL Google Maps Iframe (src)</Label>
+              <Input
+                id='gmaps_url'
+                type='url'
+                value={globalMap}
+                onChange={e => setGlobalMap(e.target.value)}
+                placeholder='https://www.google.com/maps/embed?pb=...'
+              />
+            </div>
+            <div className='flex justify-end'>
+              <Button onClick={handleSaveGlobal} disabled={loadingGlobal}>
+                <SaveIcon />
+                {loadingGlobal ? 'Menyimpan...' : 'Simpan Peta Global'}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -114,6 +128,7 @@ export default function BranchList({
       <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
         {branches.map(branch => {
           const branchInfo = data[branch.id] || {}
+          const isSaving = loadingBranches[branch.id] || false
 
           return (
             <Card key={branch.id}>
@@ -175,6 +190,13 @@ export default function BranchList({
                     </div>
                   )}
                 </div>
+
+                <div className='flex justify-end pt-2'>
+                  <Button onClick={() => handleSaveBranch(branch.id)} disabled={isSaving}>
+                    <SaveIcon />
+                    {isSaving ? 'Menyimpan...' : 'Simpan Cabang'}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           )
@@ -183,3 +205,4 @@ export default function BranchList({
     </div>
   )
 }
+
