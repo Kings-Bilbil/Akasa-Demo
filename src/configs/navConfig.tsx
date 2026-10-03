@@ -66,7 +66,7 @@ export const adminNavItems: NavItem[] = [
   {
     groupLabel: 'Lainnya',
     items: [
-      { icon: 'GlobeIcon', label: 'Kembali ke Website', href: '/' }
+      { icon: 'GlobeIcon', label: 'Kembali ke Beranda', href: '/' }
     ]
   }
 ]
@@ -78,11 +78,9 @@ export const userNavItems: NavItem[] = [
     items: [{ icon: 'ReceiptTextIcon', label: 'Riwayat Pesanan', href: '/dashboard' }]
   },
   {
-    groupLabel: 'Belanja',
+    groupLabel: 'Lainnya',
     items: [
-      { icon: 'ShoppingBagIcon', label: 'Produk', href: '/produk' },
-      { icon: 'MapPinIcon', label: 'Cabang', href: '/cabang' },
-      { icon: 'HouseIcon', label: 'Beranda', href: '/' }
+      { icon: 'HouseIcon', label: 'Kembali ke Beranda', href: '/' }
     ]
   }
 ]

@@ -50,21 +50,7 @@ export type OrderRow = {
 
 type Variant = 'admin' | 'user'
 
-type StatusFilter = 'all' | 'paid'
 
-const StatusBadge = ({ row }: { row: OrderRow }) => (
-  <div className='flex flex-col items-start gap-1'>
-    {row.isPaid ? (
-      <Badge className='h-auto rounded-sm bg-green-600/10 px-1.5 text-green-700 dark:bg-green-400/10 dark:text-green-400'>
-        Lunas
-      </Badge>
-    ) : (
-      <Badge className='h-auto rounded-sm bg-amber-500/10 px-1.5 text-amber-700 dark:bg-amber-400/10 dark:text-amber-400'>
-        Menunggu Pembayaran
-      </Badge>
-    )}
-  </div>
-)
 
 const AccurateBadge = ({ row }: { row: OrderRow }) => {
   if (row.accurateSo) {
@@ -144,11 +130,6 @@ const adminColumns: ColumnDef<OrderRow>[] = [
     cell: ({ row }) => <span className='text-sm'>{row.original.branchName || '-'}</span>
   },
   {
-    accessorKey: 'isPaid',
-    header: 'Status',
-    cell: ({ row }) => <StatusBadge row={row.original} />
-  },
-  {
     id: 'accurate',
     header: 'Accurate',
     enableSorting: false,
@@ -190,11 +171,6 @@ const userColumns: ColumnDef<OrderRow>[] = [
     )
   },
   {
-    accessorKey: 'isPaid',
-    header: 'Status',
-    cell: ({ row }) => <StatusBadge row={row.original} />
-  },
-  {
     accessorKey: 'total',
     header: 'Total',
     cell: ({ row }) => <span className='font-medium'>{formatRupiah(row.original.total)}</span>
@@ -206,11 +182,6 @@ const userColumns: ColumnDef<OrderRow>[] = [
     size: 60,
     enableHiding: false
   }
-]
-
-const FILTERS: { key: StatusFilter; label: string }[] = [
-  { key: 'all', label: 'Semua' },
-  { key: 'paid', label: 'Lunas' }
 ]
 
 const OrdersDatatable = ({
@@ -225,7 +196,6 @@ const OrdersDatatable = ({
   emptyText?: string
 }) => {
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize })
 
   const columns = variant === 'admin' ? adminColumns : userColumns
@@ -234,14 +204,13 @@ const OrdersDatatable = ({
     const q = search.trim().toLowerCase()
 
     return data.filter(order => {
-      if (statusFilter === 'paid' && !order.isPaid) return false
       if (!q) return true
 
       return [order.shortId, order.customerName, order.customerEmail, order.branchName, order.items, order.accurateSo]
         .filter(Boolean)
         .some(value => String(value).toLowerCase().includes(q))
     })
-  }, [data, search, statusFilter])
+  }, [data, search])
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
@@ -280,21 +249,6 @@ const OrdersDatatable = ({
             placeholder={variant === 'admin' ? 'Cari ID, pelanggan, cabang...' : 'Cari pesanan...'}
             className='pl-8'
           />
-        </div>
-        <div className='flex items-center gap-2'>
-          {FILTERS.map(filter => (
-            <Button
-              key={filter.key}
-              size='sm'
-              variant={statusFilter === filter.key ? 'default' : 'outline'}
-              onClick={() => {
-                setStatusFilter(filter.key)
-                resetPage()
-              }}
-            >
-              {filter.label}
-            </Button>
-          ))}
         </div>
       </div>
 
