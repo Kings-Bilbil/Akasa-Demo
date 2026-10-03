@@ -203,16 +203,16 @@ const OrdersDatatable = ({
 
   return (
     <div className='w-full'>
-      <div className='flex flex-col gap-3 border-b px-6 py-4 sm:flex-row sm:items-center sm:justify-between'>
-        <div className='relative w-full sm:max-w-xs'>
-          <SearchIcon className='text-muted-foreground absolute top-1/2 left-2.5 size-4 -translate-y-1/2' />
+      <div className='flex flex-col gap-3 border-b px-6 py-5 sm:flex-row sm:items-center sm:justify-between'>
+        <div className='relative w-full sm:max-w-sm'>
+          <SearchIcon className='text-muted-foreground pointer-events-none absolute top-1/2 left-3.5 z-10 size-4 -translate-y-1/2' />
           <Input
             value={search}
             onChange={event => {
               setSearch(event.target.value)
             }}
             placeholder={variant === 'admin' ? 'Cari ID, pelanggan, cabang...' : 'Cari pesanan...'}
-            className='pl-8'
+            className='h-10 pr-4 pl-11!'
           />
         </div>
       </div>
@@ -223,7 +223,7 @@ const OrdersDatatable = ({
             {table.getHeaderGroups().map(headerGroup => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map(header => (
-                  <TableHead key={header.id} className='text-muted-foreground h-14 first:pl-4'>
+                  <TableHead key={header.id} className='text-muted-foreground h-14 px-4 first:pl-6 last:pr-6'>
                     {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                   </TableHead>
                 ))}
@@ -235,7 +235,7 @@ const OrdersDatatable = ({
               table.getRowModel().rows.map(row => (
                 <TableRow key={row.id}>
                   {row.getVisibleCells().map(cell => (
-                    <TableCell key={cell.id} className='first:pl-4'>
+                    <TableCell key={cell.id} className='px-4 py-4 first:pl-6 last:pr-6'>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
@@ -252,7 +252,7 @@ const OrdersDatatable = ({
         </Table>
       </div>
 
-      <div className='px-6 py-4'>
+      <div className='px-6 py-5'>
         <p className='text-muted-foreground text-sm' aria-live='polite'>
           Total <span>{filteredData.length} pesanan</span>
         </p>
