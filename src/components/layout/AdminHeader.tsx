@@ -86,39 +86,12 @@ const AdminHeader = ({ userName, userEmail, isDark, onToggleTheme }: HeaderProps
             <span className='sr-only'>Ganti tema</span>
           </Button>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger render={<Button variant='ghost' size='icon' className='relative rounded-full hover:bg-transparent' />}>
-              <Avatar>
-                <AvatarFallback>{initials}</AvatarFallback>
-              </Avatar>
-              <span className='ring-card absolute right-0 bottom-0 block size-2 rounded-full bg-green-600 ring-2' />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align='end' className='w-60'>
-              <DropdownMenuGroup>
-                <DropdownMenuLabel className='flex items-center gap-4 px-2 py-2.5 font-normal'>
-                  <Avatar className='size-10'>
-                    <AvatarFallback>{initials}</AvatarFallback>
-                  </Avatar>
-                  <div className='flex min-w-0 flex-1 flex-col items-start'>
-                    <span className='text-foreground max-w-full truncate text-base font-semibold'>{userName}</span>
-                    <span className='text-muted-foreground max-w-full truncate text-sm'>{userEmail}</span>
-                  </div>
-                </DropdownMenuLabel>
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <form action='/api/auth/logout' method='POST'>
-                  <DropdownMenuItem
-                    variant='destructive'
-                    render={<button type='submit' className='w-full' />}
-                  >
-                    <LogOutIcon />
-                    <span>Keluar</span>
-                  </DropdownMenuItem>
-                </form>
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className='relative flex items-center justify-center rounded-full'>
+            <Avatar>
+              <AvatarFallback>{initials}</AvatarFallback>
+            </Avatar>
+            <span className='ring-card absolute right-0 bottom-0 block size-2 rounded-full bg-green-600 ring-2' />
+          </div>
         </div>
       </div>
     </header>

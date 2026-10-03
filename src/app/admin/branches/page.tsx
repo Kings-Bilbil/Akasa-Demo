@@ -22,6 +22,9 @@ export default async function AdminBranchesPage() {
 
   const { data: mapsData } = await adminClient.from('web_settings').select('value').eq('key', 'branch_maps').single()
 
+  const { data: globalMapsData } = await adminClient.from('web_settings').select('value').eq('key', 'gmaps_iframe_url').single()
+  const currentGlobalMapUrl = globalMapsData?.value || ''
+
   let branchMaps = {}
   if (mapsData?.value) {
     try {
@@ -32,10 +35,10 @@ export default async function AdminBranchesPage() {
   return (
     <div>
       <PageHeader
-        title='Pengaturan Peta Cabang'
-        description='Atur link iframe Google Maps, nomor telepon, dan jam operasional untuk masing-masing cabang agar muncul ketika cabang dipilih.'
+        title='Pengaturan Web & Cabang'
+        description='Atur link iframe Google Maps global (footer website) serta informasi per-cabang (peta, telepon, jam operasional).'
       />
-      <BranchList branches={branches || []} initialData={branchMaps} />
+      <BranchList branches={branches || []} initialData={branchMaps} initialGlobalMap={currentGlobalMapUrl} />
     </div>
   )
 }

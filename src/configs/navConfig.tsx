@@ -48,25 +48,27 @@ export type NavItem = {
 export const adminNavItems: NavItem[] = [
   {
     groupLabel: 'Dashboard',
-    items: [{ icon: 'LayoutDashboardIcon', label: 'Ringkasan & Pesanan', href: '/admin' }]
+    items: [{ icon: 'LayoutDashboardIcon', label: 'Pesanan', href: '/admin' }]
   },
   {
     groupLabel: 'Katalog',
     items: [
       { icon: 'PackageIcon', label: 'Gambar Produk', href: '/admin/products' },
-      { icon: 'MapPinIcon', label: 'Peta Cabang', href: '/admin/branches' }
+      { icon: 'MapPinIcon', label: 'Pengaturan Web & Cabang', href: '/admin/branches' }
     ]
   },
   {
     groupLabel: 'Sistem',
     items: [
-      { icon: 'RefreshCwIcon', label: 'Sync Data Accurate', href: '/admin/sync' },
-      { icon: 'SettingsIcon', label: 'Pengaturan Web', href: '/admin/settings' }
+      { icon: 'RefreshCwIcon', label: 'Sync Data Accurate', href: '/admin/sync' }
     ]
   },
   {
     groupLabel: 'Lainnya',
-    items: [{ icon: 'GlobeIcon', label: 'Kembali ke Website', href: '/' }]
+    items: [
+      { icon: 'GlobeIcon', label: 'Kembali ke Website', href: '/' },
+      { icon: 'LogOutIcon', label: 'Keluar', href: '/logout' }
+    ]
   }
 ]
 

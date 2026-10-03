@@ -80,7 +80,7 @@ const AppShell = ({ children, navItems, subtitle, userName, userEmail, fontClass
           <Suspense>
             <Sidebar navItems={navItems} subtitle={subtitle} />
           </Suspense>
-          <SidebarInset className='relative flex min-w-0 flex-1 flex-col overflow-hidden'>
+          <SidebarInset className='relative flex min-w-0 flex-1 flex-col'>
             {/* Cahaya segitiga khas Azuraya (hanya tampil di tema gelap) */}
             {isDark && (
               <div className='pointer-events-none absolute inset-x-0 top-0 z-0 h-161 overflow-hidden opacity-70' aria-hidden>

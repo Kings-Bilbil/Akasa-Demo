@@ -19,7 +19,15 @@ type BranchInfo = {
   closeTime?: string
 }
 
-export default function BranchList({ branches, initialData }: { branches: any[]; initialData: Record<string, any> }) {
+export default function BranchList({
+  branches,
+  initialData,
+  initialGlobalMap
+}: {
+  branches: any[]
+  initialData: Record<string, any>
+  initialGlobalMap: string
+}) {
   // Convert legacy string values to objects if needed
   const normalizedInitialData: Record<string, BranchInfo> = {}
   for (const [key, value] of Object.entries(initialData)) {
@@ -31,6 +39,7 @@ export default function BranchList({ branches, initialData }: { branches: any[];
   }
 
   const [data, setData] = useState<Record<string, BranchInfo>>(normalizedInitialData)
+  const [globalMap, setGlobalMap] = useState(initialGlobalMap)
   const [loading, setLoading] = useState(false)
   const [popupData, setPopupData] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
@@ -47,8 +56,8 @@ export default function BranchList({ branches, initialData }: { branches: any[];
   const handleSave = async () => {
     setLoading(true)
     try {
-      await saveBranchMapsAction(data)
-      setPopupData({ message: 'Pengaturan cabang berhasil disimpan!', type: 'success' })
+      await saveBranchMapsAction(data, globalMap)
+      setPopupData({ message: 'Pengaturan berhasil disimpan!', type: 'success' })
     } catch (err: any) {
       setPopupData({ message: 'Gagal menyimpan: ' + err.message, type: 'error' })
     }
@@ -64,6 +73,34 @@ export default function BranchList({ branches, initialData }: { branches: any[];
           <SaveIcon />
           {loading ? 'Menyimpan...' : 'Simpan Semua Pengaturan'}
         </Button>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Lokasi Google Maps Global (Footer Website)</CardTitle>
+          <CardDescription>
+            Masukkan URL <strong>src</strong> dari iframe Google Maps. Peta ini akan muncul di bagian bawah Halaman Utama.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className='space-y-2'>
+            <Label htmlFor='gmaps_url'>URL Google Maps Iframe (src)</Label>
+            <Input
+              id='gmaps_url'
+              type='url'
+              value={globalMap}
+              onChange={e => setGlobalMap(e.target.value)}
+              placeholder='https://www.google.com/maps/embed?pb=...'
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className='space-y-2 pt-4'>
+        <h2 className='text-lg font-semibold tracking-tight'>Pengaturan Per-Cabang</h2>
+        <p className='text-muted-foreground text-sm'>
+          Informasi ini digunakan pada halaman Pemesanan saat cabang dipilih.
+        </p>
       </div>
 
       {branches.length === 0 && (
