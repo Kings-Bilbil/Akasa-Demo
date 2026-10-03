@@ -25,6 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="id"
       className={`${afacad.variable} ${poppins.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
         {children}

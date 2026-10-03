@@ -96,7 +96,7 @@ const RowActions = ({ row }: { row: OrderRow }) => {
       href={`/invoice/${row.id}`} 
       className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'whitespace-nowrap')}
     >
-      <ReceiptTextIcon className='mr-2 size-4' aria-hidden='true' />
+      <ReceiptTextIcon className='mr-2 size-4 shrink-0' aria-hidden='true' />
       Lihat Bukti Pembayaran
     </a>
   )
@@ -123,7 +123,7 @@ const adminColumns: ColumnDef<OrderRow>[] = [
         </Avatar>
         <div className='flex flex-col text-sm'>
           <span className='text-card-foreground font-medium'>{row.original.customerName}</span>
-          <span className='text-muted-foreground'>{row.original.customerEmail}</span>
+          <span className='text-muted-foreground max-w-52 truncate'>{row.original.customerEmail}</span>
         </div>
       </div>
     )
@@ -239,12 +239,18 @@ const OrdersDatatable = ({
       </div>
 
       <div className='border-b'>
-        <Table>
+        <Table className={variant === 'admin' ? 'min-w-[920px]' : 'min-w-[720px]'}>
           <TableHeader>
             {table.getHeaderGroups().map(headerGroup => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map(header => (
-                  <TableHead key={header.id} className='text-muted-foreground h-14 px-4 first:pl-6 last:pr-6'>
+                  <TableHead
+                    key={header.id}
+                    className={cn(
+                      'text-muted-foreground h-14 px-4 first:pl-6 last:pr-6',
+                      header.column.id === 'actions' && 'sticky right-0 bg-card'
+                    )}
+                  >
                     {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                   </TableHead>
                 ))}
@@ -256,7 +262,13 @@ const OrdersDatatable = ({
               table.getRowModel().rows.map(row => (
                 <TableRow key={row.id}>
                   {row.getVisibleCells().map(cell => (
-                    <TableCell key={cell.id} className='px-4 py-4 first:pl-6 last:pr-6'>
+                    <TableCell
+                      key={cell.id}
+                      className={cn(
+                        'px-4 py-4 first:pl-6 last:pr-6',
+                        cell.column.id === 'actions' && 'sticky right-0 bg-card'
+                      )}
+                    >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}

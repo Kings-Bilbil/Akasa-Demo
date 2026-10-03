@@ -234,7 +234,7 @@ const SidebarGroupedMenuItems = ({
   return (
     <SidebarGroup>
       {groupLabel && (
-        <SidebarGroupLabel className='text-sidebar-foreground/50 tracking-wider uppercase'>
+        <SidebarGroupLabel className='text-sidebar-foreground/50 px-4 tracking-wider uppercase'>
           {groupLabel}
         </SidebarGroupLabel>
       )}

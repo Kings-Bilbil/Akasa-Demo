@@ -28,6 +28,12 @@ type AppShellProps = {
 
 const THEME_KEY = 'azuraya-admin-theme'
 
+// Script blocking yang ikut terkirim dalam HTML server agar class `dark`
+// sudah menempel di <html> SEBELUM browser menggambar pertama kali.
+// Tanpa ini, halaman sempat putih sepersekian detik (body pakai var --background
+// yang default-nya putih) baru gelap setelah hydration. Default Azuraya = gelap.
+const THEME_INIT_SCRIPT = `(function(){try{var s=localStorage.getItem('${THEME_KEY}');if(s!=='light'){document.documentElement.classList.add('dark')}}catch(e){try{document.documentElement.classList.add('dark')}catch(_){}}})();`
+
 // useLayoutEffect hanya di browser agar tidak muncul warning saat SSR
 const useIsoLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
 
@@ -77,6 +83,8 @@ const AppShell = ({ children, navItems, subtitle, userName, userEmail, fontClass
         isDark && 'dark'
       )}
     >
+      {/* Pasang tema gelap sebelum paint pertama (anti kedip putih) */}
+      <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       <TooltipProvider>
         <SidebarProvider defaultOpen={true}>
           <Suspense>
@@ -91,8 +99,16 @@ const AppShell = ({ children, navItems, subtitle, userName, userEmail, fontClass
               </div>
             )}
             <AdminHeader userName={userName} userEmail={userEmail} isDark={isDark} onToggleTheme={toggleTheme} />
-            <div className='relative z-10 mx-auto size-full max-w-360 flex-1 px-4 py-6 sm:px-6'>{children}</div>
-            <footer className='text-muted-foreground relative z-10 mx-auto w-full max-w-360 px-4 py-3 text-sm sm:px-6'>
+            <div
+              className='relative z-10 mx-auto size-full max-w-360 flex-1 px-6 py-6 sm:px-8'
+              style={{ paddingLeft: 24, paddingRight: 24, paddingTop: 24, paddingBottom: 24, boxSizing: 'border-box' }}
+            >
+              {children}
+            </div>
+            <footer
+              className='text-muted-foreground relative z-10 mx-auto w-full max-w-360 px-6 py-3 text-sm sm:px-8'
+              style={{ paddingLeft: 24, paddingRight: 24 }}
+            >
               &copy; {new Date().getFullYear()} Azuraya Grup
             </footer>
           </SidebarInset>

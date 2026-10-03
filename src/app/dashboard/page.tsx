@@ -60,7 +60,7 @@ export default async function DashboardPage() {
   return (
     <div className='grid gap-6'>
       <Card className='w-full py-0'>
-        <CardHeader className='border-b pt-6 pb-4'>
+          <CardHeader className='border-b px-6 pt-6 pb-4'>
           <CardTitle className='text-lg font-semibold'>Riwayat Pesanan</CardTitle>
         </CardHeader>
         <CardContent className='p-0'>

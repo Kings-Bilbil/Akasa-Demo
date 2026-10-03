@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { notFound } from "next/navigation";
 import PrintButton from "./PrintButton";
@@ -183,6 +184,15 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
       </div>
 
       <div data-layout="v4-inline" className="relative z-10 mx-auto box-border w-full min-w-0 max-w-3xl px-4 pb-16 pt-10 sm:px-6" style={{ width: "100%", maxWidth: "720px", marginLeft: "auto", marginRight: "auto", paddingLeft: "16px", paddingRight: "16px", paddingTop: "40px", paddingBottom: "64px", boxSizing: "border-box", position: "relative", zIndex: 10 }}>
+        <div className="mb-6 print:hidden">
+          <Link href="/dashboard" className="inline-flex items-center gap-2 text-gray-400 transition-colors hover:text-yellow-500">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            <span className="font-medium">Kembali</span>
+          </Link>
+        </div>
         <div className="w-full min-w-0 max-w-full rounded-3xl border border-white/10 bg-[#141414]" style={{ width: "100%", maxWidth: "100%", minWidth: 0, overflow: "visible", borderRadius: "24px", border: "1px solid rgba(255,255,255,0.1)", background: "#141414", boxSizing: "border-box" }}>
           {/* Header: logo + INVOICE */}
           <div className="flex w-full min-w-0 flex-col gap-6 border-b-2 border-[#F5C518] p-6 sm:flex-row sm:items-start sm:justify-between sm:p-8" style={{ display: "flex", flexWrap: "wrap", gap: "24px", width: "100%", maxWidth: "100%", boxSizing: "border-box", borderBottom: "2px solid #F5C518", padding: "24px" }}>
