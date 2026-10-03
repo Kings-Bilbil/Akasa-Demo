@@ -1,7 +1,8 @@
+import Image from 'next/image';
 import { createClient } from '@/utils/supabase/server';
 import { fetchAccurateAPI } from '@/services/accurate';
 import Link from 'next/link';
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import CheckoutButton from '@/components/CheckoutButton';
 import TemplateHeader from '@/components/TemplateHeader';
 import './detail.css';
@@ -26,13 +27,13 @@ export default async function ProductDetail({ params }: { params: Promise<{ id: 
   const mainImage = images[0] || "/images/product-foom-tangy.png";
   const thumb2 = images[1] || "/images/product-foom-tangy-2.png";
 
-  let stockDetails: any[] = [];
+  let stockDetails: { name: string; balance: number }[] = [];
   let accurateError = null;
 
   try {
     const accurateResponse = await fetchAccurateAPI('/item/detail.do?no=' + product.accurate_item_id);
     stockDetails = accurateResponse.d?.detailWarehouseData || [];
-  } catch (err: any) {
+  } catch {
     accurateError = "Gagal mengambil stok live dari Accurate.";
   }
   
@@ -43,7 +44,7 @@ export default async function ProductDetail({ params }: { params: Promise<{ id: 
     if (!accurateError) {
       const cleanName = (name: string) => name.toLowerCase().replace('gudang', '').replace('cabang', '').trim();
       const targetName = cleanName(dbBranch.name);
-      const stockItem = stockDetails.find((s: any) => cleanName(s.name) === targetName);
+      const stockItem = stockDetails.find((s: { name: string; balance: number }) => cleanName(s.name) === targetName);
       stock = stockItem ? stockItem.balance : 0;
     }
     return { ...dbBranch, stock };
@@ -66,17 +67,17 @@ export default async function ProductDetail({ params }: { params: Promise<{ id: 
           {/* Left Column: Images */}
           <div className="product-detail__gallery">
             <div className="product-detail__main-image">
-              <img src={mainImage} alt={product.name} />
+              <Image src={mainImage} alt={product.name} width={500} height={500} unoptimized />
             </div>
             <div className="product-detail__thumbnails">
               <button className="gallery-nav gallery-nav--prev" aria-label="Previous image">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
               </button>
               <div className="thumbnail active">
-                <img src={mainImage} alt="Thumbnail 1" />
+                <Image src={mainImage} alt="Thumbnail 1" width={100} height={100} unoptimized />
               </div>
               <div className="thumbnail">
-                <img src={thumb2} alt="Thumbnail 2" />
+                <Image src={thumb2} alt="Thumbnail 2" width={100} height={100} unoptimized />
               </div>
               <button className="gallery-nav gallery-nav--next" aria-label="Next image">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
@@ -113,6 +114,7 @@ export default async function ProductDetail({ params }: { params: Promise<{ id: 
               product={product} 
               branches={checkoutBranches} 
               customerId={user?.id}
+              customerEmail={user?.email || undefined}
               canCheckout={!!user && user.email !== "admin@azuraya.com"}
               checkoutMessage={
                 user && user.email === "admin@azuraya.com" ? (

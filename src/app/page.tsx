@@ -1,13 +1,11 @@
+import Image from 'next/image';
 import { createClient } from '@/utils/supabase/server';
-import Link from 'next/link';
 import TemplateHeader from '@/components/TemplateHeader';
 import TestimonialCarousel from '@/components/TestimonialCarousel';
 
-import { redirect } from 'next/navigation';
-
 export default async function Home() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  await supabase.auth.getUser();
 
   const { data: gmapsData } = await supabase.from('web_settings').select('value').eq('key', 'gmaps_iframe_url').single();
   const gmapsUrl = gmapsData?.value || "https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d1020084.7176140683!2d109.19199321307527!3d0.32924157053039146!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sid!4v1716382023912!5m2!1sen!2sid";
@@ -44,11 +42,11 @@ export default async function Home() {
         {/*  Phone mockups  */}
         <div className="hero__phones">
           <div className="hero__phone hero__phone--left">
-            <img src="/images/mobile-ui-2.png" alt="Azuraya mobile app interface showing vape products"/>
+            <Image src="/images/mobile-ui-2.png" alt="Azuraya mobile app interface showing vape products" width={300} height={600} />
             <div className="hero__phone-gradient"/>
           </div>
           <div className="hero__phone hero__phone--right">
-            <img src="/images/301_5672-removebg-preview.png" alt="Azuraya mobile app product detail screen"/>
+            <Image src="/images/301_5672-removebg-preview.png" alt="Azuraya mobile app product detail screen" width={300} height={600} />
             <div className="hero__phone-gradient"/>
           </div>
         </div></div>
@@ -70,7 +68,7 @@ export default async function Home() {
         <article className="about__card">
           <div className="about__card-circle about__card-circle--bg"/>
           <div className="about__card-circle about__card-circle--img">
-            <img src="/images/awal-berdiri.png" alt="Awal berdiri Azuraya tahun 2016"/>
+            <Image src="/images/awal-berdiri.png" alt="Awal berdiri Azuraya tahun 2016" width={200} height={200} />
           </div>
           <span className="about__card-title">Awal Berdiri</span>
           <span className="about__card-year">2016</span>
@@ -80,7 +78,7 @@ export default async function Home() {
         <article className="about__card">
           <div className="about__card-circle about__card-circle--bg"/>
           <div className="about__card-circle about__card-circle--img">
-            <img src="/images/ekspansi-cabang.png" alt="Ekspansi cabang Azuraya tahun 2019"/>
+            <Image src="/images/ekspansi-cabang.png" alt="Ekspansi cabang Azuraya tahun 2019" width={200} height={200} />
           </div>
           <span className="about__card-title">Ekspansi Cabang</span>
           <span className="about__card-year">2019</span>
@@ -90,7 +88,7 @@ export default async function Home() {
         <article className="about__card">
           <div className="about__card-circle about__card-circle--bg"/>
           <div className="about__card-circle about__card-circle--img">
-            <img src="/images/kemitraan-iqos.png" alt="Kemitraan IQOS Azuraya tahun 2025"/>
+            <Image src="/images/kemitraan-iqos.png" alt="Kemitraan IQOS Azuraya tahun 2025" width={200} height={200} />
           </div>
           <span className="about__card-title">Kemitraan IQOS</span>
           <span className="about__card-year">2025</span>
@@ -100,7 +98,7 @@ export default async function Home() {
         <article className="about__card">
           <div className="about__card-circle about__card-circle--bg"/>
           <div className="about__card-circle about__card-circle--img">
-            <img src="/images/menuju-dekade.png" alt="Menuju 1 Dekade Azuraya tahun 2026"/>
+            <Image src="/images/menuju-dekade.png" alt="Menuju 1 Dekade Azuraya tahun 2026" width={200} height={200} />
           </div>
           <span className="about__card-title">Menuju 1 Dekade</span>
           <span className="about__card-year">2026</span>
@@ -131,7 +129,7 @@ export default async function Home() {
           </a>
         </div>
         <div className="products__image">
-          <img src="/images/produk-gift-cards.png" alt="Produk vape Azuraya - berbagai pilihan perangkat dan aksesoris"/>
+          <Image src="/images/produk-gift-cards.png" alt="Produk vape Azuraya - berbagai pilihan perangkat dan aksesoris" width={600} height={400} />
         </div></div>
       
     </section>
@@ -192,9 +190,9 @@ export default async function Home() {
         <TestimonialCarousel direction="left" speed={1}>
           {/*  First Set  */}
           <div className="testimonial-card">
-            <p className="testimonial-card__quote">"pelayanan ramah, pkokny bagus lah tidak mengecewak..."</p>
+            <p className="testimonial-card__quote">&ldquo;pelayanan ramah, pkokny bagus lah tidak mengecewak...&rdquo;</p>
             <div className="testimonial-card__footer">
-              <img className="testimonial-card__avatar" src="/images/testi-1.png" alt="Phillip W."/>
+              <Image className="testimonial-card__avatar" src="/images/testi-1.png" alt="Phillip W." width={70} height={70} />
               <div className="testimonial-card__info">
                 <h4 className="testimonial-card__name">Phillip W., Operations Yuezie</h4>
                 <div className="testimonial-card__stars">
@@ -204,9 +202,9 @@ export default async function Home() {
             </div>
           </div>
           <div className="testimonial-card">
-            <p className="testimonial-card__quote">"Udah ke-2 kalinya belanja online di sini, rekomen..."</p>
+            <p className="testimonial-card__quote">&ldquo;Udah ke-2 kalinya belanja online di sini, rekomen...&rdquo;</p>
             <div className="testimonial-card__footer">
-              <img className="testimonial-card__avatar" src="/images/testi-2.png" alt="Agus"/>
+              <Image className="testimonial-card__avatar" src="/images/testi-2.png" alt="Agus" width={70} height={70} />
               <div className="testimonial-card__info">
                 <h4 className="testimonial-card__name">Agus</h4>
                 <div className="testimonial-card__stars">
@@ -216,9 +214,9 @@ export default async function Home() {
             </div>
           </div>
           <div className="testimonial-card">
-            <p className="testimonial-card__quote">"Pelayanan ramah.. rekomended tempat belanja kebut..."</p>
+            <p className="testimonial-card__quote">&ldquo;Pelayanan ramah.. rekomended tempat belanja kebut...&rdquo;</p>
             <div className="testimonial-card__footer">
-              <img className="testimonial-card__avatar" src="/images/testi-3.png" alt="Destu Rizky R"/>
+              <Image className="testimonial-card__avatar" src="/images/testi-3.png" alt="Destu Rizky R" width={70} height={70} />
               <div className="testimonial-card__info">
                 <h4 className="testimonial-card__name">Destu Rizky R</h4>
                 <div className="testimonial-card__stars">
@@ -228,9 +226,9 @@ export default async function Home() {
             </div>
           </div>
           <div className="testimonial-card">
-            <p className="testimonial-card__quote">"Pelayanannya baik, vaporistanya ramah"</p>
+            <p className="testimonial-card__quote">&ldquo;Pelayanannya baik, vaporistanya ramah&rdquo;</p>
             <div className="testimonial-card__footer">
-              <img className="testimonial-card__avatar" src="/images/testi-4.png" alt="Faiq"/>
+              <Image className="testimonial-card__avatar" src="/images/testi-4.png" alt="Faiq" width={70} height={70} />
               <div className="testimonial-card__info">
                 <h4 className="testimonial-card__name">Faiq</h4>
                 <div className="testimonial-card__stars">
@@ -241,9 +239,9 @@ export default async function Home() {
           </div>
           {/*  Duplicate Set for Animation  */}
           <div className="testimonial-card">
-            <p className="testimonial-card__quote">"pelayanan ramah, pkokny bagus lah tidak mengecewak..."</p>
+            <p className="testimonial-card__quote">&ldquo;pelayanan ramah, pkokny bagus lah tidak mengecewak...&rdquo;</p>
             <div className="testimonial-card__footer">
-              <img className="testimonial-card__avatar" src="/images/testi-1.png" alt="Phillip W."/>
+              <Image className="testimonial-card__avatar" src="/images/testi-1.png" alt="Phillip W." width={70} height={70} />
               <div className="testimonial-card__info">
                 <h4 className="testimonial-card__name">Phillip W., Operations Yuezie</h4>
                 <div className="testimonial-card__stars">
@@ -253,9 +251,9 @@ export default async function Home() {
             </div>
           </div>
           <div className="testimonial-card">
-            <p className="testimonial-card__quote">"Udah ke-2 kalinya belanja online di sini, rekomen..."</p>
+            <p className="testimonial-card__quote">&ldquo;Udah ke-2 kalinya belanja online di sini, rekomen...&rdquo;</p>
             <div className="testimonial-card__footer">
-              <img className="testimonial-card__avatar" src="/images/testi-2.png" alt="Agus"/>
+              <Image className="testimonial-card__avatar" src="/images/testi-2.png" alt="Agus" width={70} height={70} />
               <div className="testimonial-card__info">
                 <h4 className="testimonial-card__name">Agus</h4>
                 <div className="testimonial-card__stars">
@@ -265,9 +263,9 @@ export default async function Home() {
             </div>
           </div>
           <div className="testimonial-card">
-            <p className="testimonial-card__quote">"Pelayanan ramah.. rekomended tempat belanja kebut..."</p>
+            <p className="testimonial-card__quote">&ldquo;Pelayanan ramah.. rekomended tempat belanja kebut...&rdquo;</p>
             <div className="testimonial-card__footer">
-              <img className="testimonial-card__avatar" src="/images/testi-3.png" alt="Destu Rizky R"/>
+              <Image className="testimonial-card__avatar" src="/images/testi-3.png" alt="Destu Rizky R" width={70} height={70} />
               <div className="testimonial-card__info">
                 <h4 className="testimonial-card__name">Destu Rizky R</h4>
                 <div className="testimonial-card__stars">
@@ -277,9 +275,9 @@ export default async function Home() {
             </div>
           </div>
           <div className="testimonial-card">
-            <p className="testimonial-card__quote">"Pelayanannya baik, vaporistanya ramah"</p>
+            <p className="testimonial-card__quote">&ldquo;Pelayanannya baik, vaporistanya ramah&rdquo;</p>
             <div className="testimonial-card__footer">
-              <img className="testimonial-card__avatar" src="/images/testi-4.png" alt="Faiq"/>
+              <Image className="testimonial-card__avatar" src="/images/testi-4.png" alt="Faiq" width={70} height={70} />
               <div className="testimonial-card__info">
                 <h4 className="testimonial-card__name">Faiq</h4>
                 <div className="testimonial-card__stars">
@@ -293,9 +291,9 @@ export default async function Home() {
         <TestimonialCarousel direction="right" speed={1}>
           {/*  First Set  */}
           <div className="testimonial-card">
-            <p className="testimonial-card__quote">"Emang mantab dah di azuraya nih, pelayanan bagos, ..."</p>
+            <p className="testimonial-card__quote">&ldquo;Emang mantab dah di azuraya nih, pelayanan bagos, ...&rdquo;</p>
             <div className="testimonial-card__footer">
-              <img className="testimonial-card__avatar" src="/images/testi-5.png" alt="Black one project"/>
+              <Image className="testimonial-card__avatar" src="/images/testi-5.png" alt="Black one project" width={70} height={70} />
               <div className="testimonial-card__info">
                 <h4 className="testimonial-card__name">Black one project</h4>
                 <div className="testimonial-card__stars">
@@ -305,9 +303,9 @@ export default async function Home() {
             </div>
           </div>
           <div className="testimonial-card">
-            <p className="testimonial-card__quote">"Rekomend buat nyari liquid sama yg lain, pelayan ..."</p>
+            <p className="testimonial-card__quote">&ldquo;Rekomend buat nyari liquid sama yg lain, pelayan ...&rdquo;</p>
             <div className="testimonial-card__footer">
-              <img className="testimonial-card__avatar" src="/images/testi-6.png" alt="Arjuna Yogi"/>
+              <Image className="testimonial-card__avatar" src="/images/testi-6.png" alt="Arjuna Yogi" width={70} height={70} />
               <div className="testimonial-card__info">
                 <h4 className="testimonial-card__name">Arjuna Yogi</h4>
                 <div className="testimonial-card__stars">
@@ -317,9 +315,9 @@ export default async function Home() {
             </div>
           </div>
           <div className="testimonial-card">
-            <p className="testimonial-card__quote">"Pelayanan yg ramah membuat customer senang Sukses..."</p>
+            <p className="testimonial-card__quote">&ldquo;Pelayanan yg ramah membuat customer senang Sukses...&rdquo;</p>
             <div className="testimonial-card__footer">
-              <img className="testimonial-card__avatar" src="/images/testi-7.png" alt="Rizky Pratama"/>
+              <Image className="testimonial-card__avatar" src="/images/testi-7.png" alt="Rizky Pratama" width={70} height={70} />
               <div className="testimonial-card__info">
                 <h4 className="testimonial-card__name">Rizky Pratama</h4>
                 <div className="testimonial-card__stars">
@@ -330,9 +328,9 @@ export default async function Home() {
           </div>
           {/*  Duplicate Set for Animation  */}
           <div className="testimonial-card">
-            <p className="testimonial-card__quote">"Emang mantab dah di azuraya nih, pelayanan bagos, ..."</p>
+            <p className="testimonial-card__quote">&ldquo;Emang mantab dah di azuraya nih, pelayanan bagos, ...&rdquo;</p>
             <div className="testimonial-card__footer">
-              <img className="testimonial-card__avatar" src="/images/testi-5.png" alt="Black one project"/>
+              <Image className="testimonial-card__avatar" src="/images/testi-5.png" alt="Black one project" width={70} height={70} />
               <div className="testimonial-card__info">
                 <h4 className="testimonial-card__name">Black one project</h4>
                 <div className="testimonial-card__stars">
@@ -342,9 +340,9 @@ export default async function Home() {
             </div>
           </div>
           <div className="testimonial-card">
-            <p className="testimonial-card__quote">"Rekomend buat nyari liquid sama yg lain, pelayan ..."</p>
+            <p className="testimonial-card__quote">&ldquo;Rekomend buat nyari liquid sama yg lain, pelayan ...&rdquo;</p>
             <div className="testimonial-card__footer">
-              <img className="testimonial-card__avatar" src="/images/testi-6.png" alt="Arjuna Yogi"/>
+              <Image className="testimonial-card__avatar" src="/images/testi-6.png" alt="Arjuna Yogi" width={70} height={70} />
               <div className="testimonial-card__info">
                 <h4 className="testimonial-card__name">Arjuna Yogi</h4>
                 <div className="testimonial-card__stars">
@@ -354,9 +352,9 @@ export default async function Home() {
             </div>
           </div>
           <div className="testimonial-card">
-            <p className="testimonial-card__quote">"Pelayanan yg ramah membuat customer senang Sukses..."</p>
+            <p className="testimonial-card__quote">&ldquo;Pelayanan yg ramah membuat customer senang Sukses...&rdquo;</p>
             <div className="testimonial-card__footer">
-              <img className="testimonial-card__avatar" src="/images/testi-7.png" alt="Rizky Pratama"/>
+              <Image className="testimonial-card__avatar" src="/images/testi-7.png" alt="Rizky Pratama" width={70} height={70} />
               <div className="testimonial-card__info">
                 <h4 className="testimonial-card__name">Rizky Pratama</h4>
                 <div className="testimonial-card__stars">

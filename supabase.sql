@@ -38,6 +38,7 @@ create table public.products_cache (
   name text not null,
   description text,
   price numeric not null default 0,
+  category text default 'Uncategorized',
   image_url text,
   last_synced_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
@@ -59,6 +60,7 @@ create table public.orders (
   status order_status default 'pending_payment' not null,
   total_amount numeric not null,
   accurate_sales_order_id text,
+  accurate_sales_invoice_id text,
   accurate_sales_receipt_id text,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
@@ -120,3 +122,27 @@ create table public.sync_logs (
 
 alter table public.sync_logs enable row level security;
 -- Hanya backend (Service Role) yang bisa akses tabel log ini
+
+-- 8. Tabel web_settings (Pengaturan Web: peta global + peta per cabang)
+-- Dipakai oleh halaman /, /cabang, dan /admin/branches. Belum ada sebelumnya
+-- padahal kode sudah pakai, jadi ditambahkan di sini.
+create table if not exists public.web_settings (
+  key text primary key,
+  value text not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+alter table public.web_settings enable row level security;
+create policy "Anyone can read web settings" on public.web_settings for select using (true);
+
+-- ========================================================
+-- MIGRASI untuk database yang SUDAH ADA (jalankan sekali saja)
+-- Aman dipakai ulang karena pakai IF NOT EXISTS / ADD COLUMN IF NOT EXISTS
+-- ========================================================
+alter table public.products_cache add column if not exists category text default 'Uncategorized';
+alter table public.orders add column if not exists accurate_sales_invoice_id text;
+create table if not exists public.web_settings (
+  key text primary key,
+  value text not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);

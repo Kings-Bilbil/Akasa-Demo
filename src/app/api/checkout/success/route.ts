@@ -1,44 +1,43 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/utils/supabase/admin';
-import { createSalesOrder } from '@/services/accurateOrder';
+import { fulfillPaidOrder } from '@/services/orderFulfillment';
 
 export async function POST(request: Request) {
   try {
     const { orderId } = await request.json();
-    const supabase = createAdminClient();
-
-    // 1. Update status pesanan di database kita
-    const { data: order, error: updateError } = await supabase
-      .from('orders')
-      .update({ status: 'paid' })
-      .eq('id', orderId)
-      .select('*, order_items(*, products_cache(*)), branches_cache(*)')
-      .single();
-      
-    if (updateError || !order) {
-      console.error('Gagal update pesanan:', updateError);
-      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    if (!orderId) {
+      return NextResponse.json({ error: 'orderId wajib diisi' }, { status: 400 });
     }
 
-    // 2. Buat Sales Order di Accurate Online
-    console.log(`\n\n[LOCALHOST BYPASS] Memicu Sales Order ke Accurate untuk Pesanan: ${orderId}`);
-    
-    // Siapkan data untuk Accurate API
-    const itemsForAccurate = order.order_items.map((item: any) => ({
-      accurate_item_id: item.products_cache.accurate_item_id,
-      price: item.price,
-      qty: item.quantity
-    }));
+    const supabase = createAdminClient();
 
-    const accurateBranchId = parseInt(order.branches_cache.accurate_branch_id);
+    // Jalur localhost bypass: Midtrans webhook tidak bisa menjangkau localhost,
+    // jadi frontend memanggil endpoint ini setelah snap.pay sukses.
+    // Memakai helper yang SAMA dengan webhook (Faktur + Receipt, idempotent)
+    // supaya tidak terjadi dokumen ganda SO vs Invoice.
+    // Bug lama `item.price` (harusnya `unit_price`) sudah hilang karena
+    // pengambilan harga dilakukan di dalam fulfillPaidOrder.
+    console.log(`\n\n[LOCALHOST BYPASS] Fulfillment untuk Pesanan: ${orderId}`);
 
-    // Panggil servis Accurate kita (urutan argumen: branchId, items)
-    const accurateRes = await createSalesOrder(accurateBranchId, itemsForAccurate);
-    console.log('[Accurate API Response]', accurateRes);
-
-    return NextResponse.json({ success: true, accurateRes });
-  } catch (error: any) {
+    try {
+      const result = await fulfillPaidOrder(supabase, orderId, {
+        source: 'checkout-success',
+      });
+      return NextResponse.json({ success: true, skipped: result.skipped, ...result });
+    } catch (fulfillError: unknown) {
+      // Order sudah ditandai paid, hanya Accurate yang gagal — tetap balas sukses
+      // supaya popup frontend tidak menakuti pembeli. Admin bisa lihat di sync_logs.
+      console.error('[checkout/success] Accurate gagal, order tetap paid:', fulfillError);
+      return NextResponse.json({
+        success: true,
+        warning: fulfillError instanceof Error ? fulfillError.message : String(fulfillError),
+      });
+    }
+  } catch (error: unknown) {
     console.error('Error di checkout success:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : String(error) },
+      { status: 500 }
+    );
   }
 }

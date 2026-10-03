@@ -44,8 +44,9 @@ export default function AdminSyncPage() {
         setMessage(failMsg)
         setPopupData({ message: failMsg, type: 'error' })
       }
-    } catch (e: any) {
-      const failMsg = translateError(e.message)
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e)
+      const failMsg = translateError(msg)
       setMessage(failMsg)
       setPopupData({ message: failMsg, type: 'error' })
     }

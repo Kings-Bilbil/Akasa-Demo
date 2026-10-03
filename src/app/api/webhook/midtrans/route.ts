@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/utils/supabase/admin';
-import { fetchAccurateAPI } from '@/services/accurate';
-import { createSalesInvoice, createSalesReceipt } from '@/services/accurateOrder';
+import { fulfillPaidOrder } from '@/services/orderFulfillment';
 
 export async function POST(request: Request) {
   try {
@@ -11,88 +10,33 @@ export async function POST(request: Request) {
     // Status transaksi sukses di Midtrans
     if (body.transaction_status === 'capture' || body.transaction_status === 'settlement') {
       const orderId = body.order_id;
-      
-      // 1. Update status pesanan di Supabase
-      await supabase.from('orders').update({ status: 'paid' }).eq('id', orderId);
-      
-      // 2. Tembak Sales Invoice & Receipt ke Accurate (Opsi B)
-      const { data: order } = await supabase
-        .from('orders')
-        .select(`
-          total_amount,
-          branch_id, 
-          branches_cache(accurate_branch_id, name),
-          order_items(quantity, unit_price, products_cache(accurate_item_id))
-        `)
-        .eq('id', orderId)
-        .single();
-        
-      if (order) {
-        const branchAccurateId = parseInt((order.branches_cache as any).accurate_branch_id);
-        const branchName = (order.branches_cache as any).name;
-        const totalAmount = Number(order.total_amount);
 
-        // Cari warehouseId yang sesuai dengan nama cabang (Fuzzy Match)
-        let warehouseId: number | undefined = undefined;
-        try {
-          const whRes = await fetchAccurateAPI('/warehouse/list.do?fields=id,name');
-          if (whRes && whRes.d) {
-            const cleanName = (n: string) => n.toLowerCase().replace('gudang', '').replace('cabang', '').trim();
-            const targetName = cleanName(branchName);
-            const matchedWarehouse = whRes.d.find((w: any) => cleanName(w.name) === targetName);
-            if (matchedWarehouse) {
-              warehouseId = matchedWarehouse.id;
-            }
-          }
-        } catch (err) {
-          console.error("Gagal mengambil warehouse list:", err);
-        }
-
-        const items = order.order_items.map((i: any) => ({
-          accurate_item_id: (i.products_cache as any).accurate_item_id,
-          qty: Number(i.quantity),
-          price: Number(i.unit_price),
-          warehouseId: warehouseId
-        }));
-
-        try {
-          console.log("Membuat Faktur Penjualan di cabang:", branchAccurateId);
-          // Langkah 1: Buat Faktur Penjualan (Memotong stok fisik)
-          const siResult = await createSalesInvoice(branchAccurateId, items);
-          if (siResult && siResult.r && siResult.r.id) {
-            const invoiceId = siResult.r.id;
-            await supabase.from('orders').update({ accurate_sales_order_id: invoiceId.toString() }).eq('id', orderId);
-            
-            // Langkah 2: Buat Penerimaan Penjualan (Melunasi tagihan Faktur ke Kas Midtrans)
-            console.log("Membuat Penerimaan Penjualan (Lunas) untuk faktur:", invoiceId);
-            const srResult = await createSalesReceipt(branchAccurateId, invoiceId, totalAmount);
-            if (srResult && srResult.r && srResult.r.id) {
-               await supabase.from('orders').update({ accurate_sales_receipt_id: srResult.r.id.toString() }).eq('id', orderId);
-               await supabase.from('sync_logs').insert({ related_order_id: orderId, action: 'CREATE_SALES_INVOICE_AND_RECEIPT', status: 'success', message: 'Faktur & Penerimaan (Lunas) berhasil dibuat di Accurate' });
-            } else {
-               await supabase.from('sync_logs').insert({ related_order_id: orderId, action: 'CREATE_SALES_RECEIPT', status: 'error', message: 'Faktur berhasil, tapi gagal membuat Penerimaan Penjualan.' });
-            }
-          } else {
-            throw new Error("Respon Accurate tidak mengembalikan ID Faktur");
-          }
-        } catch (e: any) {
-          const errStr = String(e.message || e).toLowerCase();
-          let userMsg = `Gagal sinkronisasi ke Accurate: ${e.message || e}`;
-          if (errStr.includes('fetch') || errStr.includes('network')) userMsg = 'Gagal menghubungi server Accurate.';
-          else if (errStr.includes('api') || errStr.includes('token') || errStr.includes('unauthorized')) userMsg = 'Koneksi ditolak oleh Accurate. Token kedaluwarsa.';
-          else if (errStr.includes('timeout')) userMsg = 'Server Accurate terlalu lama merespons.';
-          else if (errStr.includes('no_item') || errStr.includes('not found')) userMsg = 'Barang tidak ditemukan di Accurate.';
-          
-          await supabase.from('sync_logs').insert({ related_order_id: orderId, action: 'CREATE_SALES_INVOICE', status: 'error', message: userMsg });
-        }
+      // Satu pintu fulfillment (idempotent): buat Faktur + Receipt sekali saja,
+      // catat payments + sync_logs di dalam helper. Tidak lagi simpan
+      // invoiceId ke kolom accurate_sales_order_id yang menipu.
+      try {
+        await fulfillPaidOrder(supabase, orderId, {
+          source: 'webhook',
+          midtransNotification: {
+            transaction_id: body.transaction_id,
+            payment_type: body.payment_type,
+            transaction_status: body.transaction_status,
+            raw: body,
+          },
+        });
+      } catch (e: unknown) {
+        // Order tetap ditandai paid di dalam helper, Accurate dicatat sebagai error log.
+        // Webhook tetap balas success agar Midtrans tidak retry terus.
+        console.error('Fulfillment webhook gagal (order tetap paid):', e);
       }
       
       return NextResponse.json({ status: 'success' });
     }
     
     return NextResponse.json({ status: 'ignored' });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Webhook error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Webhook gagal';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

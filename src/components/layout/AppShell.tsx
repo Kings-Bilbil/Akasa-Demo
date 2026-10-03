@@ -37,14 +37,16 @@ const useIsoLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : use
  * - Tema gelap/terang disimpan di localStorage dan hanya berlaku di area ini.
  */
 const AppShell = ({ children, navItems, subtitle, userName, userEmail, fontClassName }: AppShellProps) => {
-  const [isDark, setIsDark] = useState(true)
-
-  // Baca preferensi tema tersimpan
-  useEffect(() => {
-    // Tema Azuraya: gelap (hitam + emas) adalah default
-    const saved = window.localStorage.getItem(THEME_KEY)
-    if (saved) setIsDark(saved === 'dark')
-  }, [])
+  const [isDark, setIsDark] = useState<boolean>(() => {
+    // Baca preferensi tema tersimpan saat inisialisasi (hindari setState di effect).
+    // Tema Azuraya: gelap (hitam + emas) adalah default.
+    if (typeof window === 'undefined') return true
+    try {
+      return window.localStorage.getItem(THEME_KEY) !== 'light'
+    } catch {
+      return true
+    }
+  })
 
   // Sinkronkan class ke <html> (untuk portal) dan bersihkan saat keluar dari area admin
   useIsoLayoutEffect(() => {

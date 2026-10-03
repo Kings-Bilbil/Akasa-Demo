@@ -6,6 +6,7 @@ import { type ComponentType } from 'react'
 import { useCallback, useMemo, useState } from 'react'
 
 // Next Imports
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 
@@ -484,7 +485,7 @@ const SidebarLayout = ({ navItems, subtitle = 'Panel' }: SidebarLayoutProps) => 
               className='gap-2.5 bg-transparent! [&>svg]:size-8'
               render={<Link href={`${themeConfig.homePageUrl}`} />}
             >
-              <img src='/images/logo.png' alt={themeConfig.templateName} className='size-9 shrink-0 object-contain drop-shadow-md' />
+              <Image src='/images/logo.png' alt={themeConfig.templateName} width={36} height={36} className='size-9 shrink-0 object-contain drop-shadow-md' />
               <div className='flex flex-col items-start'>
                 <span className='text-primary text-lg font-bold tracking-widest text-nowrap uppercase'>{themeConfig.templateName}</span>
                 <span className='text-xs font-light text-nowrap'>{subtitle}</span>

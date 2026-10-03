@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import React from 'react';
 
@@ -158,7 +159,7 @@ export default function Popup({ message, type, onClose, title, actionUrl, action
         <div className="azu-card" onClick={e => e.stopPropagation()}>
           
           <div className="azu-logo-container">
-            <img src="/images/logo.png" alt="Azuraya" className="azu-logo-img" />
+            <Image src="/images/logo.png" alt="Azuraya" width={117} height={74} className="azu-logo-img" />
             <span className="azu-logo-text">AZURAYA</span>
           </div>
 

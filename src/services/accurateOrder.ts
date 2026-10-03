@@ -1,9 +1,14 @@
 import { fetchAccurateAPI } from './accurate';
 
+// Dibuat konfigurabel via env agar tidak menumpuk di satu pelanggan demo.
+// Fallback tetap ke nilai lama supaya demo yang sudah jalan tidak rusak.
+const ACCURATE_CUSTOMER_NO = process.env.ACCURATE_CUSTOMER_NO || 'C.00001'; // default lama: Budi Vape
+const ACCURATE_BANK_NO = process.env.ACCURATE_BANK_NO || '110104'; // default lama: Kas Midtrans
+
 export async function createSalesOrder(branchId: number, items: {accurate_item_id: string, qty: number, price: number}[]) {
   const payload = {
     branchId: branchId,
-    customerNo: 'C.00001', // ID default pelanggan (Budi Vape)
+    customerNo: ACCURATE_CUSTOMER_NO,
     detailItem: items.map(i => ({
       itemNo: i.accurate_item_id,
       quantity: i.qty,
@@ -17,7 +22,7 @@ export async function createSalesOrder(branchId: number, items: {accurate_item_i
 export async function createSalesInvoice(branchId: number, items: {accurate_item_id: string, qty: number, price: number, warehouseId?: number}[]) {
   const payload = {
     branchId: branchId,
-    customerNo: 'C.00001', // ID default pelanggan (Budi Vape)
+    customerNo: ACCURATE_CUSTOMER_NO,
     detailItem: items.map(i => ({
       itemNo: i.accurate_item_id,
       quantity: i.qty,
@@ -32,8 +37,8 @@ export async function createSalesInvoice(branchId: number, items: {accurate_item
 export async function createSalesReceipt(branchId: number, invoiceId: number, totalAmount: number) {
   const payload = {
     branchId: branchId,
-    customerNo: 'C.00001',
-    bankNo: '110104', // Akun Kas Midtrans sesuai setup di Accurate
+    customerNo: ACCURATE_CUSTOMER_NO,
+    bankNo: ACCURATE_BANK_NO, // Akun Kas Midtrans sesuai setup di Accurate
     chequeAmount: totalAmount,
     detailItem: [
       {

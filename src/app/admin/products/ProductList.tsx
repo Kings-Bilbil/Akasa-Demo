@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useState } from 'react'
 
 import { ImageIcon, SaveIcon } from 'lucide-react'
@@ -12,7 +13,14 @@ import { Label } from '@/components/ui/label'
 
 import { createClient } from '@/utils/supabase/client'
 
-export default function ProductList({ initialProducts }: { initialProducts: any[] }) {
+type Product = {
+  id: string
+  name: string
+  accurate_item_id: string
+  image_url?: string | null
+}
+
+export default function ProductList({ initialProducts }: { initialProducts: Product[] }) {
   const [products, setProducts] = useState(initialProducts)
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [popupData, setPopupData] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
@@ -87,10 +95,13 @@ export default function ProductList({ initialProducts }: { initialProducts: any[
                 <div className='flex gap-2'>
                   {[url1, url2].map((url, index) =>
                     url ? (
-                      <img
+                      <Image
                         key={index}
                         src={url}
                         alt={`Preview ${index + 1}`}
+                        width={64}
+                        height={64}
+                        unoptimized
                         className='bg-muted size-16 rounded-md border object-cover'
                       />
                     ) : (

@@ -4,7 +4,21 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import './cabang.css';
 
-export default function CabangClient({ branches, branchMaps }: { branches: any[], branchMaps: Record<string, any> }) {
+type Branch = {
+  id: string
+  name: string
+  accurate_branch_id?: string
+  address?: string
+}
+
+type BranchInfo = {
+  mapUrl?: string
+  phone?: string
+  openTime?: string
+  closeTime?: string
+}
+
+export default function CabangClient({ branches, branchMaps }: { branches: Branch[]; branchMaps: Record<string, BranchInfo | string> }) {
   const [search, setSearch] = useState('');
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(branches.length > 0 ? branches[0].id : null);
   const [currentTimeStr, setCurrentTimeStr] = useState<string>('');
@@ -32,7 +46,6 @@ export default function CabangClient({ branches, branchMaps }: { branches: any[]
   };
 
   const filteredBranches = branches.filter(b => b.name.toLowerCase().includes(search.toLowerCase()));
-  const selectedBranch = branches.find(b => b.id === selectedBranchId);
   const selectedBranchData = selectedBranchId ? getBranchData(selectedBranchId) : null;
   const mapUrl = selectedBranchData?.mapUrl || null;
 

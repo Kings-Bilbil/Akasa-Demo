@@ -1,5 +1,6 @@
 
 'use client';
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -15,8 +16,9 @@ const LoadingSpinner = () => (
 );
 
 export default function TemplateHeader() {
+  type HeaderUser = { email?: string; fullName: string };
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<HeaderUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
@@ -122,7 +124,7 @@ export default function TemplateHeader() {
   
         <div className="header__logo">
           <Link href="/" onClick={(e) => handleNavClick(e, '#beranda')}>
-            <img src="/images/logo.png" alt="Azuraya Grup Logo" />
+            <Image src="/images/logo.png" alt="Azuraya Grup Logo" width={117} height={74} />
           </Link>
         </div>
   
@@ -149,7 +151,7 @@ export default function TemplateHeader() {
               )}
 
               <Link href={user.email === "admin@azuraya.com" ? "/admin" : "/dashboard"} style={{ display: "flex", alignItems: "center", gap: "12px", marginLeft: "8px", textDecoration: "none" }}>
-                <img src="/images/user-profile.jpg" alt="Profile" style={{ width: "48px", height: "48px", borderRadius: "50%", objectFit: "cover" }} onError={(e) => { e.currentTarget.src = "https://ui-avatars.com/api/?name=" + (user.email === "admin@azuraya.com" ? "Admin" : user.fullName) + "&background=F5C518&color=000"; }} />
+                <Image src="/images/user-profile.jpg" alt="Profile" width={48} height={48} unoptimized style={{ width: "48px", height: "48px", borderRadius: "50%", objectFit: "cover" }} onError={(e) => { e.currentTarget.src = "https://ui-avatars.com/api/?name=" + (user.email === "admin@azuraya.com" ? "Admin" : user.fullName) + "&background=F5C518&color=000"; }} />
                 <span style={{ color: "#F5C518", fontWeight: "bold", fontSize: "18px", fontFamily: "var(--font-primary)" }}>{user.email === "admin@azuraya.com" ? "Admin" : user.fullName.split(" ")[0]}</span>
               </Link>
             </div>

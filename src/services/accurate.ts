@@ -58,7 +58,7 @@ function generateSignature(timestamp: string): string {
  * @param method HTTP Method (GET atau POST)
  * @param body Data untuk request POST
  */
-export async function fetchAccurateAPI(endpoint: string, method: 'GET' | 'POST' = 'GET', body?: any) {
+export async function fetchAccurateAPI(endpoint: string, method: 'GET' | 'POST' = 'GET', body?: Record<string, unknown>) {
   const timestamp = getAccurateTimestamp();
   const signature = generateSignature(timestamp);
   

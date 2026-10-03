@@ -7,6 +7,13 @@ import { createClient } from '@/utils/supabase/server'
 
 import BranchList from './BranchList'
 
+type BranchInfo = {
+  mapUrl?: string
+  phone?: string
+  openTime?: string
+  closeTime?: string
+}
+
 export default async function AdminBranchesPage() {
   const supabase = await createClient()
   const {
@@ -14,7 +21,7 @@ export default async function AdminBranchesPage() {
   } = await supabase.auth.getUser()
 
   if (!user || user.email !== 'admin@azuraya.com') {
-    redirect('/admin')
+    redirect('/')
   }
 
   const adminClient = createAdminClient()
@@ -25,11 +32,11 @@ export default async function AdminBranchesPage() {
   const { data: globalMapsData } = await adminClient.from('web_settings').select('value').eq('key', 'gmaps_iframe_url').single()
   const currentGlobalMapUrl = globalMapsData?.value || ''
 
-  let branchMaps = {}
+  let branchMaps: Record<string, BranchInfo | string> = {}
   if (mapsData?.value) {
     try {
       branchMaps = JSON.parse(mapsData.value)
-    } catch (e) {}
+    } catch {}
   }
 
   return (

@@ -3,7 +3,14 @@
 import { createAdminClient } from '@/utils/supabase/admin';
 import { revalidatePath } from 'next/cache';
 
-export async function saveBranchMapsAction(data: Record<string, any>) {
+type BranchInfo = {
+  mapUrl?: string
+  phone?: string
+  openTime?: string
+  closeTime?: string
+};
+
+export async function saveBranchMapsAction(data: Record<string, BranchInfo | string>) {
   const adminSupabase = createAdminClient();
   const { error } = await adminSupabase
     .from('web_settings')
@@ -27,13 +34,13 @@ export async function saveGlobalMapAction(globalMapUrl: string) {
   return { success: true };
 }
 
-export async function saveSingleBranchAction(branchId: string, branchInfo: any) {
+export async function saveSingleBranchAction(branchId: string, branchInfo: BranchInfo) {
   const adminSupabase = createAdminClient();
   
   const { data: existingData } = await adminSupabase.from('web_settings').select('value').eq('key', 'branch_maps').single();
-  let maps: Record<string, any> = {};
+  let maps: Record<string, BranchInfo> = {};
   if (existingData?.value) {
-    try { maps = JSON.parse(existingData.value); } catch(e) {}
+    try { maps = JSON.parse(existingData.value); } catch {}
   }
   
   maps[branchId] = branchInfo;

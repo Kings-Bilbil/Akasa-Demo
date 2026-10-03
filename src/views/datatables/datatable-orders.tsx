@@ -31,8 +31,12 @@ export type OrderRow = {
   branchName: string
   isPaid: boolean
   total: number
-  /** Nomor Sales Order di Accurate (jika sudah terkirim) */
+  /** Nomor Sales Order di Accurate (jalur lama localhost, jika ada) */
   accurateSo?: string | null
+  /** Nomor Faktur Penjualan di Accurate (jalur benar webhook/fulfillment) */
+  accurateInvoice?: string | null
+  /** Nomor Penerimaan Penjualan di Accurate (pelunasan) */
+  accurateReceipt?: string | null
   /** Pesan error sinkronisasi ke Accurate (jika gagal) */
   syncError?: string | null
   /** Ringkasan item, mis. "2x Produk A, 1x Produk B" */
@@ -44,6 +48,22 @@ type Variant = 'admin' | 'user'
 
 
 const AccurateBadge = ({ row }: { row: OrderRow }) => {
+  // Prioritas: Faktur (benar) > SO lama > error > strip
+  if (row.accurateInvoice) {
+    return (
+      <div className='flex flex-col gap-1'>
+        <Badge variant='outline' className='h-auto rounded-sm px-1.5 font-normal'>
+          Faktur: {row.accurateInvoice}
+        </Badge>
+        {row.accurateReceipt && (
+          <Badge variant='outline' className='h-auto rounded-sm px-1.5 font-normal'>
+            Lunas: {row.accurateReceipt}
+          </Badge>
+        )}
+      </div>
+    )
+  }
+
   if (row.accurateSo) {
     return (
       <Badge variant='outline' className='h-auto rounded-sm px-1.5 font-normal'>
@@ -187,12 +207,13 @@ const OrdersDatatable = ({
     return data.filter(order => {
       if (!q) return true
 
-      return [order.shortId, order.customerName, order.customerEmail, order.branchName, order.items, order.accurateSo]
+      return [order.shortId, order.customerName, order.customerEmail, order.branchName, order.items, order.accurateSo, order.accurateInvoice, order.accurateReceipt]
         .filter(Boolean)
         .some(value => String(value).toLowerCase().includes(q))
     })
   }, [data, search])
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: filteredData,
     columns,

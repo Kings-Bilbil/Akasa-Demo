@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/utils/supabase/client';
@@ -6,18 +7,15 @@ import TemplateHeader from '@/components/TemplateHeader';
 import './produk.css';
 
 export default function ProdukPage() {
-  const [products, setProducts] = useState<any[]>([]);
-  const [branches, setBranches] = useState<any[]>([]);
+  type Product = { id: string; name: string; price: number; category?: string | null; image_url?: string | null };
+  const [products, setProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('Semua');
 
   useEffect(() => {
     const supabase = createClient();
     supabase.from('products_cache').select('*').then((res) => {
-      if (res.data) setProducts(res.data);
-    });
-    supabase.from('branches_cache').select('*').then((res) => {
-      if (res.data) setBranches(res.data);
+      if (res.data) setProducts(res.data as Product[]);
     });
   }, []);
 
@@ -69,7 +67,7 @@ export default function ProdukPage() {
             </div>
 
             <div className="products-page__categories" style={{ justifyContent: 'center' }}>
-              {categories.map((cat: any) => (
+              {categories.map((cat: string) => (
                 <button 
                   key={cat} 
                   className={`category-btn ${activeCategory === cat ? 'category-btn--active' : ''}`}
@@ -88,7 +86,7 @@ export default function ProdukPage() {
                 return (
                   <Link href={"/product/" + product.id} key={product.id} className="product-card">
                     <div className="product-card__image">
-                      <img src={firstImage} alt={product.name} />
+                      <Image src={firstImage} alt={product.name} width={500} height={500} unoptimized />
                       <div className="product-card__gradient"></div>
                     </div>
                     <div className="product-card__content">

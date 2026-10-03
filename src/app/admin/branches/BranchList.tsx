@@ -19,13 +19,20 @@ type BranchInfo = {
   closeTime?: string
 }
 
+type Branch = {
+  id: string
+  name: string
+  accurate_branch_id?: string
+  address?: string
+}
+
 export default function BranchList({
   branches,
   initialData,
   initialGlobalMap
 }: {
-  branches: any[]
-  initialData: Record<string, any>
+  branches: Branch[]
+  initialData: Record<string, BranchInfo | string>
   initialGlobalMap: string
 }) {
   // Convert legacy string values to objects if needed
@@ -34,7 +41,7 @@ export default function BranchList({
     if (typeof value === 'string') {
       normalizedInitialData[key] = { mapUrl: value }
     } else {
-      normalizedInitialData[key] = value as BranchInfo
+      normalizedInitialData[key] = value
     }
   }
 
@@ -59,8 +66,9 @@ export default function BranchList({
     try {
       await saveGlobalMapAction(globalMap)
       setPopupData({ message: 'Pengaturan peta global berhasil disimpan!', type: 'success' })
-    } catch (err: any) {
-      setPopupData({ message: 'Gagal menyimpan: ' + err.message, type: 'error' })
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e)
+      setPopupData({ message: 'Gagal menyimpan: ' + msg, type: 'error' })
     }
     setLoadingGlobal(false)
   }
@@ -71,8 +79,9 @@ export default function BranchList({
       const branchInfo = data[branchId] || {}
       await saveSingleBranchAction(branchId, branchInfo)
       setPopupData({ message: 'Pengaturan cabang berhasil disimpan!', type: 'success' })
-    } catch (err: any) {
-      setPopupData({ message: 'Gagal menyimpan: ' + err.message, type: 'error' })
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e)
+      setPopupData({ message: 'Gagal menyimpan: ' + msg, type: 'error' })
     }
     setLoadingBranches(prev => ({ ...prev, [branchId]: false }))
   }

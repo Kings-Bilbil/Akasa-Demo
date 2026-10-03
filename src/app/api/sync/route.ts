@@ -50,8 +50,9 @@ export async function POST() {
       message: `Berhasil sinkronisasi ${branches.length} cabang dan ${syncedItemsCount} barang.` 
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Sync Error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Gagal sinkronisasi';
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

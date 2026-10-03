@@ -1,10 +1,20 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { v4 as uuidv4 } from 'uuid';
+import { useState } from 'react';
 import Popup from '@/components/Popup';
 
-export default function CheckoutButton({ product, branches, customerId, canCheckout = true, checkoutMessage }: { product: any, branches: any[], customerId?: string, canCheckout?: boolean, checkoutMessage?: React.ReactNode }) {
-  const [loading, setLoading] = useState(false);
+type Product = {
+  id: string;
+  name: string;
+  price: number;
+}
+
+type Branch = {
+  id: string;
+  name: string;
+  stock?: number;
+}
+
+export default function CheckoutButton({ product, branches, canCheckout = true, checkoutMessage }: { product: Product, branches: Branch[], customerId?: string, customerEmail?: string, canCheckout?: boolean, checkoutMessage?: React.ReactNode }) {
   const [selectedBranch, setSelectedBranch] = useState(branches.find(b => b.stock === undefined || b.stock > 0)?.id || '');
   const [popupData, setPopupData] = useState<{message: string, type: 'success' | 'error', title?: string, actionUrl?: string, actionText?: string, actionIcon?: React.ReactNode} | null>(null);
   const [quantity, setQuantity] = useState(1);
@@ -12,53 +22,28 @@ export default function CheckoutButton({ product, branches, customerId, canCheck
 
   const selectedBranchData = branches.find(b => b.id === selectedBranch);
   const maxStock = selectedBranchData?.stock !== undefined ? selectedBranchData.stock : 999;
+  const isOutOfStock = maxStock === 0;
+  const minusDisabled = quantity <= 1;
+  const plusDisabled = quantity >= maxStock;
 
-  useEffect(() => {
+  const handleSelectBranch = (branchId: string) => {
+    setSelectedBranch(branchId);
     setQuantity(1);
-  }, [selectedBranch]);
+    setIsDropdownOpen(false);
+  };
 
-  const handleCheckout = async () => {
+  // Mode pajangan: Add To Cart hanya tampil UI + popup info, tidak checkout / snap.pay.
+  // Kalau nanti mau keranjang beneran, ganti isi fungsi ini dengan logic cart (localStorage / API).
+  const handleDisplayOnly = () => {
     if (!selectedBranch) {
       setPopupData({ message: 'Silakan pilih cabang terlebih dahulu.', type: 'error' });
       return;
     }
-    
-    setLoading(true);
-    try {
-      const orderId = uuidv4();
-      const res = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          orderId: orderId,
-          total: product.price * quantity,
-          customerId: customerId, 
-          branchId: selectedBranch,
-          items: [{ id: product.id, quantity: quantity, price: product.price }]
-        })
-      });
-      
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Terjadi kesalahan');
-      
-      (window as any).snap.pay(data.token, {
-        onSuccess: function(result: any) {
-          setPopupData({ message: 'Pembayaran berhasil! Silakan ambil barang Anda di cabang yang dipilih.', type: 'success', title: 'Pembayaran Berhasil!', actionUrl: '/dashboard', actionText: 'Unduh Bukti Pembayaran', actionIcon: <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> });
-        },
-        onPending: function(result: any) {
-          setPopupData({ message: 'Menunggu pembayaran Anda.', type: 'success' });
-        },
-        onError: function(result: any) {
-          setPopupData({ message: 'Pembayaran gagal. Silakan coba lagi.', type: 'error' });
-        },
-        onClose: function() {
-          setLoading(false);
-        }
-      });
-    } catch (err: any) {
-      setPopupData({ message: err.message, type: 'error' });
-      setLoading(false);
-    }
+    setPopupData({
+      message: 'Fitur keranjang masih pajangan. Nanti tombol ini hanya masuk ke keranjang, bukan langsung membeli.',
+      type: 'success',
+      title: 'Segera Hadir',
+    });
   };
 
   return (
@@ -80,8 +65,7 @@ export default function CheckoutButton({ product, branches, customerId, canCheck
                     className={"dropdown__item "}
                     onClick={() => {
                       if (!isDisabled) {
-                        setSelectedBranch(b.id);
-                        setIsDropdownOpen(false);
+                        handleSelectBranch(b.id);
                       }
                     }}
                   >
@@ -98,36 +82,46 @@ export default function CheckoutButton({ product, branches, customerId, canCheck
       {canCheckout ? (
         <>
           <div className="product-detail__add-to-cart-row mt-6 flex gap-4">
-            <div className="quantity-selector flex items-center justify-between" style={{ backgroundColor: "#1A1C23", borderRadius: "100px", padding: "0 12px", width: "120px", height: "56px" }}>
-              <button 
-                className="qty-btn qty-btn--minus text-white text-xl font-bold" 
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+            <div className="quantity-selector flex items-center justify-between" style={{ backgroundColor: "#1A1C23", borderRadius: "100px", padding: "0 12px", width: "120px", height: "56px", flexShrink: 0 }}>
+              <button
+                type="button"
+                aria-label="Kurangi jumlah"
+                className="qty-btn qty-btn--minus text-white text-xl font-bold cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                disabled={minusDisabled}
                 style={{ width: "32px", height: "32px" }}
               >-</button>
               <span className="qty-value text-gold font-bold text-lg" style={{ color: "var(--color-gold)" }}>{quantity}</span>
-              <button 
-                className="qty-btn qty-btn--plus text-white text-xl font-bold"
-                onClick={() => setQuantity(Math.min(maxStock, quantity + 1))}
-                disabled={quantity >= maxStock}
+              <button
+                type="button"
+                aria-label="Tambah jumlah"
+                className="qty-btn qty-btn--plus text-white text-xl font-bold cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                onClick={() => setQuantity((q) => Math.min(maxStock, q + 1))}
+                disabled={plusDisabled}
+                title={isOutOfStock ? "Stok habis" : `Maks ${maxStock}`}
                 style={{ width: "32px", height: "32px" }}
               >+</button>
             </div>
 
-            <button 
-              onClick={handleCheckout}
-              disabled={loading || !selectedBranch || maxStock === 0}
-              className="btn-primary btn-cart flex-grow flex justify-center items-center gap-2"
+            <button
+              type="button"
+              onClick={handleDisplayOnly}
+              disabled={!selectedBranch}
+              className="btn-primary btn-cart flex-grow flex justify-center items-center gap-2 disabled:opacity-50"
               style={{ backgroundColor: "var(--color-gold)", color: "#000", borderRadius: "100px", height: "56px", fontSize: "16px", fontWeight: "bold", border: "none" }}
             >
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
-              {loading ? "Memproses..." : "Add To Cart"}
+              Add To Cart
             </button>
           </div>
 
-          <button onClick={handleCheckout} disabled={loading || !selectedBranch || maxStock === 0} className="btn-primary btn-summary w-full mt-4 flex flex-col justify-center items-center cursor-pointer disabled:opacity-50" style={{backgroundColor: "var(--color-gold)", color: "#000", borderRadius: "100px", height: "64px", border: "none", fontWeight: "700", fontSize: "14px", lineHeight: "1.2"}}>
+          <button type="button" onClick={handleDisplayOnly} disabled={!selectedBranch} className="btn-primary btn-summary w-full mt-4 flex flex-col justify-center items-center cursor-pointer disabled:opacity-50" style={{backgroundColor: "var(--color-gold)", color: "#000", borderRadius: "100px", height: "64px", border: "none", fontWeight: "700", fontSize: "14px", lineHeight: "1.2"}}>
             <span>{quantity} Produk</span>
             <span>Rp {(product.price * quantity).toLocaleString("id-ID")}</span>
           </button>
+          {isOutOfStock && (
+            <p className="text-sm text-red-400 mt-2">Stok di cabang ini habis. Pilih cabang lain.</p>
+          )}
         </>
       ) : (
         <div className="mt-8">{checkoutMessage}</div>

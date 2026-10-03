@@ -4,6 +4,13 @@ import './cabang.css';
 import CabangClient from './CabangClient';
 import { createClient } from '@/utils/supabase/server';
 
+type BranchInfo = {
+  mapUrl?: string
+  phone?: string
+  openTime?: string
+  closeTime?: string
+}
+
 export default async function CabangPage() {
   const supabase = await createClient();
   
@@ -14,12 +21,12 @@ export default async function CabangPage() {
   const { data: mapsData } = await supabase.from('web_settings').select('value').eq('key', 'branch_maps').single();
   
   // Parse mapsData
-  let branchMaps = {};
+  let branchMaps: Record<string, BranchInfo | string> = {};
   try {
     if (mapsData?.value) {
       branchMaps = JSON.parse(mapsData.value);
     }
-  } catch (e) {}
+  } catch {}
 
   return (
     <>

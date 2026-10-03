@@ -8,6 +8,20 @@ import OrdersDatatable, { type OrderRow } from '@/views/datatables/datatable-ord
 
 import { createClient } from '@/utils/supabase/server'
 
+type DashboardOrderItem = {
+  quantity: number
+  products_cache?: { name?: string | null } | null
+}
+
+type DashboardOrder = {
+  id: string
+  created_at: string
+  status: string
+  total_amount?: number | null
+  branches_cache?: { name?: string | null } | null
+  order_items?: DashboardOrderItem[] | null
+}
+
 export default async function DashboardPage() {
   const supabase = await createClient()
   const {
@@ -29,7 +43,7 @@ export default async function DashboardPage() {
     .eq('status', 'paid')
     .order('created_at', { ascending: false })
 
-  const list = (orders ?? []) as any[]
+  const list = (orders ?? []) as DashboardOrder[]
 
   const rows: OrderRow[] = list.map(order => ({
     id: order.id,
@@ -40,7 +54,7 @@ export default async function DashboardPage() {
     branchName: order.branches_cache?.name || '',
     isPaid: order.status === 'paid',
     total: order.total_amount || 0,
-    items: (order.order_items ?? []).map((item: any) => `${item.quantity}x ${item.products_cache?.name ?? 'Produk'}`).join(', ')
+    items: (order.order_items ?? []).map((item: DashboardOrderItem) => `${item.quantity}x ${item.products_cache?.name ?? 'Produk'}`).join(', ')
   }))
 
   return (

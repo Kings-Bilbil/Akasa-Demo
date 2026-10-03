@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import { useState } from "react";
 import {
   Card,
@@ -70,9 +71,11 @@ export default function LoginCardSection({ error, isRegister = false }: { error?
           <Card className="card-animate w-full border-zinc-800 bg-zinc-950/80 backdrop-blur-xl shadow-2xl">
             <CardHeader className="space-y-4 text-center" style={{ paddingTop: "24px", paddingBottom: "0px" }}>
               <div className="flex justify-center items-center gap-3" style={{ marginBottom: "20px" }}>
-                <img 
-                  src="/images/logo.png" 
-                  alt="Azuraya Logo" 
+                <Image
+                  src="/images/logo.png"
+                  alt="Azuraya Logo"
+                  width={117}
+                  height={45}
                   className="object-contain drop-shadow-md" style={{ height: "45px", width: "auto" }}
                 />
                 <span className="text-3xl font-bold tracking-widest text-[#F5C518]">AZURAYA</span>

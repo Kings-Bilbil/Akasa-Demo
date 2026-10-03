@@ -7,7 +7,7 @@ import { Fragment } from 'react'
 import { usePathname } from 'next/navigation'
 
 // Third-party Imports
-import { LogOutIcon, MoonStarIcon, SunIcon } from 'lucide-react'
+import { MoonStarIcon, SunIcon } from 'lucide-react'
 
 // Component Imports
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -20,15 +20,6 @@ import {
   BreadcrumbSeparator
 } from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu'
 import { Separator } from '@/components/ui/separator'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 
