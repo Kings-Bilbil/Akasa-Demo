@@ -34,13 +34,17 @@ export async function createSalesInvoice(branchId: number, items: {accurate_item
 }
 
 // OPSI B: Buat Penerimaan Penjualan (Melunasi Faktur Penjualan)
+// CATATAN: field detail HARUS bernama `detailInvoice` (bukan `detailItem`).
+// Terbukti via uji langsung 2026-10-03: `detailItem` ditolak Accurate dengan
+// "Detail dari transaksi belum diisi!", sedangkan `detailInvoice` sukses
+// (receipt 110104.2026.10.00001 untuk faktur 650).
 export async function createSalesReceipt(branchId: number, invoiceId: number, totalAmount: number) {
   const payload = {
     branchId: branchId,
     customerNo: ACCURATE_CUSTOMER_NO,
     bankNo: ACCURATE_BANK_NO, // Akun Kas Midtrans sesuai setup di Accurate
     chequeAmount: totalAmount,
-    detailItem: [
+    detailInvoice: [
       {
         invoiceId: invoiceId,
         paymentAmount: totalAmount

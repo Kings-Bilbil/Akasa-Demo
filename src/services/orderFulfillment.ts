@@ -57,43 +57,73 @@ export async function fulfillPaidOrder(
     throw new Error('Order not found');
   }
 
-  // 3. Idempotency guard: sudah pernah dibuatkan faktur -> jangan buat lagi.
+  // 3. Idempotency guard: kalau faktur + receipt sudah ada -> jangan buat lagi.
   const existingInvoiceId =
     (order as { accurate_sales_invoice_id?: string | null }).accurate_sales_invoice_id ||
     null;
+  const existingReceiptId =
+    (order as { accurate_sales_receipt_id?: string | null }).accurate_sales_receipt_id ||
+    null;
 
-  if (existingInvoiceId) {
+  if (existingInvoiceId && existingReceiptId) {
     await recordPaymentRow(supabase, orderId, opts, 'paid-duplicate-skipped');
     return { skipped: true, reason: 'already-fulfilled' };
   }
 
-  const branchAccurateId = parseInt(
-    ((order as unknown as { branches_cache: { accurate_branch_id: string } }).branches_cache as unknown as { accurate_branch_id: string }).accurate_branch_id
-  );
+  const branchAccurateRaw = (
+    (order as unknown as { branches_cache: { accurate_branch_id: string } }).branches_cache as unknown as { accurate_branch_id: string }
+  ).accurate_branch_id;
+  const branchAccurateId = parseInt(branchAccurateRaw);
   const branchName = (
     (order as unknown as { branches_cache: { name: string } }).branches_cache as unknown as { name: string }
   ).name;
   const totalAmount = Number((order as { total_amount: number }).total_amount);
 
+  // Validasi awal dengan pesan jelas (dicatat ke sync_logs oleh pemanggil via throw)
+  if (Number.isNaN(branchAccurateId)) {
+    throw new Error(`ID cabang Accurate tidak valid: "${branchAccurateRaw}" (branch: ${branchName})`);
+  }
+
+  const rawItems = (
+    order as unknown as { order_items: { quantity: number; unit_price: number; products_cache: { accurate_item_id: string } | null }[] }
+  ).order_items;
+  if (!Array.isArray(rawItems) || rawItems.length === 0) {
+    throw new Error('Tidak ada item pada pesanan ini.');
+  }
+  const brokenItem = rawItems.find((i) => !i.products_cache?.accurate_item_id);
+  if (brokenItem) {
+    throw new Error('Ada item yang tidak terhubung ke produk Accurate (accurate_item_id kosong).');
+  }
+
   // 4. Cari warehouseId yang cocok dengan nama cabang (fuzzy match lama, dipertahankan)
   let warehouseId: number | undefined = undefined;
+  let warehouseNote = 'tidak dicoba';
   try {
     const whRes = await fetchAccurateAPI('/warehouse/list.do?fields=id,name');
     if (whRes && whRes.d) {
       const cleanName = (n: string) =>
         n.toLowerCase().replace('gudang', '').replace('cabang', '').trim();
       const targetName = cleanName(branchName);
-      const matchedWarehouse = (whRes.d as { id: number; name: string }[]).find(
+      const list = whRes.d as { id: number; name: string }[];
+      const matchedWarehouse = list.find(
         (w) => cleanName(w.name) === targetName
       );
-      if (matchedWarehouse) warehouseId = matchedWarehouse.id;
+      if (matchedWarehouse) {
+        warehouseId = matchedWarehouse.id;
+        warehouseNote = `cocok "${matchedWarehouse.name}" (id ${matchedWarehouse.id})`;
+      } else {
+        warehouseNote = `tidak ada yang cocok untuk "${branchName}" dari [${list.map((w) => w.name).join(', ')}]`;
+      }
+    } else {
+      warehouseNote = 'daftar gudang kosong dari Accurate';
     }
   } catch (err) {
+    warehouseNote = `gagal ambil daftar gudang: ${err instanceof Error ? err.message : String(err)}`;
     console.error('Gagal mengambil warehouse list:', err);
   }
 
   const items = (
-    (order as unknown as { order_items: { quantity: number; unit_price: number; products_cache: { accurate_item_id: string } }[] }).order_items
+    rawItems as { quantity: number; unit_price: number; products_cache: { accurate_item_id: string } }[]
   ).map((i) => ({
     accurate_item_id: i.products_cache.accurate_item_id,
     qty: Number(i.quantity),
@@ -101,21 +131,36 @@ export async function fulfillPaidOrder(
     warehouseId,
   }));
 
+  // Catat persis payload yang dikirim agar kegagalan seperti
+  // "Detail dari transaksi belum diisi!" bisa ditelusuri tanpa tebak-tebakan.
+  const payloadPreview =
+    `branch=${branchAccurateId} warehouse=${warehouseId ?? 'otomatis'} ` +
+    `items=[${items.map((i) => `${i.accurate_item_id}:${i.qty}x@${i.price}`).join(', ')}]`;
+  console.log(`[${opts.source}] Payload Faktur untuk ${orderId}: ${payloadPreview} (${warehouseNote})`);
+
   try {
-    console.log(`[${opts.source}] Membuat Faktur Penjualan di cabang:`, branchAccurateId);
-    const siResult = await createSalesInvoice(branchAccurateId, items);
+    // Kalau faktur sudah ada (mis. order lama yang receipt-nya gagal),
+    // lewati pembuatan faktur dan langsung lengkapi receipt-nya saja.
+    let invoiceId: number;
+    if (existingInvoiceId) {
+      invoiceId = parseInt(existingInvoiceId);
+      console.log(`[${opts.source}] Faktur sudah ada (${invoiceId}), lanjut ke Penerimaan saja.`);
+    } else {
+      console.log(`[${opts.source}] Membuat Faktur Penjualan di cabang:`, branchAccurateId);
+      const siResult = await createSalesInvoice(branchAccurateId, items);
 
-    if (!siResult || !siResult.r || !siResult.r.id) {
-      throw new Error('Respon Accurate tidak mengembalikan ID Faktur');
+      if (!siResult || !siResult.r || !siResult.r.id) {
+        throw new Error('Respon Accurate tidak mengembalikan ID Faktur');
+      }
+
+      invoiceId = siResult.r.id as number;
+      // Simpan di kolom baru yang benar. Kolom lama accurate_sales_order_id
+      // TIDAK ditimpa lagi supaya tidak menipu (dulu invoice disimpan di kolom SO).
+      await supabase
+        .from('orders')
+        .update({ accurate_sales_invoice_id: invoiceId.toString() })
+        .eq('id', orderId);
     }
-
-    const invoiceId = siResult.r.id as number;
-    // Simpan di kolom baru yang benar. Kolom lama accurate_sales_order_id
-    // TIDAK ditimpa lagi supaya tidak menipu (dulu invoice disimpan di kolom SO).
-    await supabase
-      .from('orders')
-      .update({ accurate_sales_invoice_id: invoiceId.toString() })
-      .eq('id', orderId);
 
     console.log(`[${opts.source}] Membuat Penerimaan Penjualan (Lunas) untuk faktur:`, invoiceId);
     const srResult = await createSalesReceipt(branchAccurateId, invoiceId, totalAmount);
@@ -159,7 +204,7 @@ export async function fulfillPaidOrder(
       related_order_id: orderId,
       action: 'CREATE_SALES_INVOICE',
       status: 'error',
-      message: userMsg,
+      message: `${userMsg} [${payloadPreview} | gudang: ${warehouseNote}]`,
     });
     throw new Error(userMsg);
   }
