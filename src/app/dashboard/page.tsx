@@ -26,6 +26,7 @@ export default async function DashboardPage() {
     .from('orders')
     .select('*, order_items(*, products_cache(name)), branches_cache(name)')
     .eq('customer_id', user.id)
+    .eq('status', 'paid')
     .order('created_at', { ascending: false })
 
   const list = (orders ?? []) as any[]
