@@ -5,7 +5,6 @@ import { CircleCheckBigIcon, ClockIcon, ShoppingCartIcon, WalletIcon } from 'luc
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
-import StatisticsCard from '@/views/dashboards/statistics/statistics-card-01'
 import OrdersDatatable, { type OrderRow } from '@/views/datatables/datatable-orders'
 
 import { formatRupiah } from '@/lib/format'
@@ -51,30 +50,46 @@ export default async function DashboardPage() {
   return (
     <div className='grid gap-6'>
       <div className='grid gap-6 sm:grid-cols-2 xl:grid-cols-4'>
-        <StatisticsCard
-          icon={<ShoppingCartIcon className='size-4' />}
-          value={String(list.length)}
-          title='Total Pesanan'
-          description='Semua pesanan Anda'
-        />
-        <StatisticsCard
-          icon={<CircleCheckBigIcon className='size-4' />}
-          value={String(paid.length)}
-          title='Pesanan Lunas'
-          description='Sudah dibayar'
-        />
-        <StatisticsCard
-          icon={<ClockIcon className='size-4' />}
-          value={String(list.length - paid.length)}
-          title='Menunggu Pembayaran'
-          description='Belum dibayar'
-        />
-        <StatisticsCard
-          icon={<WalletIcon className='size-4' />}
-          value={formatRupiah(totalSpent)}
-          title='Total Belanja'
-          description='Dari pesanan yang lunas'
-        />
+        <Card>
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>Total Pesanan</CardTitle>
+            <ShoppingCartIcon className='size-4 text-muted-foreground' />
+          </CardHeader>
+          <CardContent>
+            <div className='text-2xl font-bold'>{list.length}</div>
+            <p className='text-xs text-muted-foreground'>Semua pesanan Anda</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>Pesanan Lunas</CardTitle>
+            <CircleCheckBigIcon className='size-4 text-muted-foreground' />
+          </CardHeader>
+          <CardContent>
+            <div className='text-2xl font-bold'>{paid.length}</div>
+            <p className='text-xs text-muted-foreground'>Sudah dibayar</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>Menunggu Pembayaran</CardTitle>
+            <ClockIcon className='size-4 text-muted-foreground' />
+          </CardHeader>
+          <CardContent>
+            <div className='text-2xl font-bold'>{list.length - paid.length}</div>
+            <p className='text-xs text-muted-foreground'>Belum dibayar</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>Total Belanja</CardTitle>
+            <WalletIcon className='size-4 text-muted-foreground' />
+          </CardHeader>
+          <CardContent>
+            <div className='text-2xl font-bold'>{formatRupiah(totalSpent)}</div>
+            <p className='text-xs text-muted-foreground'>Dari pesanan yang lunas</p>
+          </CardContent>
+        </Card>
       </div>
 
       <Card className='w-full py-0'>

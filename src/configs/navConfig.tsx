@@ -66,8 +66,7 @@ export const adminNavItems: NavItem[] = [
   {
     groupLabel: 'Lainnya',
     items: [
-      { icon: 'GlobeIcon', label: 'Kembali ke Website', href: '/' },
-      { icon: 'LogOutIcon', label: 'Keluar', href: '/logout' }
+      { icon: 'GlobeIcon', label: 'Kembali ke Website', href: '/' }
     ]
   }
 ]
