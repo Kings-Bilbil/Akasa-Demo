@@ -55,7 +55,7 @@ export default async function DashboardPage() {
               <Button render={<Link href='/produk' />}>Belanja Sekarang</Button>
             </div>
           ) : (
-            <OrdersDatatable data={rows} variant='user' pageSize={5} />
+            <OrdersDatatable data={rows} variant='user' />
           )}
         </CardContent>
       </Card>

@@ -2,33 +2,23 @@
 
 import { useMemo, useState } from 'react'
 
-import type { ColumnDef, PaginationState } from '@tanstack/react-table'
+import type { ColumnDef } from '@tanstack/react-table'
 import {
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   useReactTable
 } from '@tanstack/react-table'
 
-import { ChevronLeftIcon, ChevronRightIcon, EllipsisVerticalIcon, ReceiptTextIcon, SearchIcon } from 'lucide-react'
+import { ReceiptTextIcon, SearchIcon } from 'lucide-react'
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
-import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem } from '@/components/ui/pagination'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
-import { usePagination } from '@/hooks/use-pagination'
 import { formatRupiah, formatTanggal } from '@/lib/format'
 
 export type OrderRow = {
@@ -75,28 +65,18 @@ const AccurateBadge = ({ row }: { row: OrderRow }) => {
   return <span className='text-muted-foreground text-sm'>-</span>
 }
 
-const RowActions = ({ row }: { row: OrderRow }) => (
-  <DropdownMenu>
-    <DropdownMenuTrigger render={<Button size='icon' variant='ghost' aria-label='Aksi pesanan' />}>
-      <EllipsisVerticalIcon className='size-5' aria-hidden='true' />
-    </DropdownMenuTrigger>
-    <DropdownMenuContent align='end'>
-      <DropdownMenuGroup>
-        {row.isPaid ? (
-          <DropdownMenuItem render={<a href={`/invoice/${row.id}`} target='_blank' rel='noreferrer' />}>
-            <ReceiptTextIcon />
-            <span>Lihat Invoice</span>
-          </DropdownMenuItem>
-        ) : (
-          <DropdownMenuItem disabled>
-            <ReceiptTextIcon />
-            <span>Invoice belum tersedia</span>
-          </DropdownMenuItem>
-        )}
-      </DropdownMenuGroup>
-    </DropdownMenuContent>
-  </DropdownMenu>
-)
+const RowActions = ({ row }: { row: OrderRow }) => {
+  if (!row.isPaid) {
+    return <span className='text-muted-foreground text-xs'>Belum Dibayar</span>
+  }
+  
+  return (
+    <Button size='sm' variant='outline' className='whitespace-nowrap' render={<a href={`/invoice/${row.id}`} target='_blank' rel='noreferrer' />}>
+      <ReceiptTextIcon className='mr-2 size-4' aria-hidden='true' />
+      Lihat Bukti Pembayaran
+    </Button>
+  )
+}
 
 const adminColumns: ColumnDef<OrderRow>[] = [
   {
@@ -187,16 +167,13 @@ const userColumns: ColumnDef<OrderRow>[] = [
 const OrdersDatatable = ({
   data,
   variant,
-  pageSize = 10,
   emptyText = 'Belum ada pesanan.'
 }: {
   data: OrderRow[]
   variant: Variant
-  pageSize?: number
   emptyText?: string
 }) => {
   const [search, setSearch] = useState('')
-  const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize })
 
   const columns = variant === 'admin' ? adminColumns : userColumns
 
@@ -212,28 +189,13 @@ const OrdersDatatable = ({
     })
   }, [data, search])
 
-  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: filteredData,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    onPaginationChange: setPagination,
-    state: { pagination }
+    getFilteredRowModel: getFilteredRowModel()
   })
-
-  const { pages, showLeftEllipsis, showRightEllipsis } = usePagination({
-    currentPage: table.getState().pagination.pageIndex + 1,
-    totalPages: table.getPageCount(),
-    paginationItemsToDisplay: 2
-  })
-
-  const resetPage = () => setPagination(prev => ({ ...prev, pageIndex: 0 }))
-
-  const from = filteredData.length === 0 ? 0 : pagination.pageIndex * pagination.pageSize + 1
-  const to = Math.min((pagination.pageIndex + 1) * pagination.pageSize, filteredData.length)
 
   return (
     <div className='w-full'>
@@ -244,7 +206,6 @@ const OrdersDatatable = ({
             value={search}
             onChange={event => {
               setSearch(event.target.value)
-              resetPage()
             }}
             placeholder={variant === 'admin' ? 'Cari ID, pelanggan, cabang...' : 'Cari pesanan...'}
             className='pl-8'
@@ -287,73 +248,10 @@ const OrdersDatatable = ({
         </Table>
       </div>
 
-      <div className='flex items-center justify-between gap-3 px-6 py-4 max-sm:flex-col md:max-lg:flex-col'>
-        <p className='text-muted-foreground text-sm whitespace-nowrap' aria-live='polite'>
-          Menampilkan{' '}
-          <span>
-            {from} - {to}
-          </span>{' '}
-          dari <span>{filteredData.length} pesanan</span>
+      <div className='px-6 py-4'>
+        <p className='text-muted-foreground text-sm' aria-live='polite'>
+          Total <span>{filteredData.length} pesanan</span>
         </p>
-
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <Button
-                className='disabled:pointer-events-none disabled:opacity-50'
-                variant='ghost'
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-                aria-label='Halaman sebelumnya'
-              >
-                <ChevronLeftIcon aria-hidden='true' />
-                Sebelumnya
-              </Button>
-            </PaginationItem>
-
-            {showLeftEllipsis && (
-              <PaginationItem>
-                <PaginationEllipsis />
-              </PaginationItem>
-            )}
-
-            {pages.map(page => {
-              const isActive = page === table.getState().pagination.pageIndex + 1
-
-              return (
-                <PaginationItem key={page}>
-                  <Button
-                    size='icon'
-                    className={`${!isActive && 'bg-primary/10 text-primary hover:bg-primary/20 focus-visible:ring-primary/20 dark:focus-visible:ring-primary/40'}`}
-                    onClick={() => table.setPageIndex(page - 1)}
-                    aria-current={isActive ? 'page' : undefined}
-                  >
-                    {page}
-                  </Button>
-                </PaginationItem>
-              )
-            })}
-
-            {showRightEllipsis && (
-              <PaginationItem>
-                <PaginationEllipsis />
-              </PaginationItem>
-            )}
-
-            <PaginationItem>
-              <Button
-                className='disabled:pointer-events-none disabled:opacity-50'
-                variant='ghost'
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-                aria-label='Halaman berikutnya'
-              >
-                Berikutnya
-                <ChevronRightIcon aria-hidden='true' />
-              </Button>
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
       </div>
     </div>
   )
