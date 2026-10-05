@@ -174,3 +174,16 @@ drop policy if exists "Authenticated delete product images" on storage.objects;
 create policy "Authenticated delete product images"
   on storage.objects for delete
   using (bucket_id = 'product-images' and auth.role() = 'authenticated');
+
+-- ========================================================
+-- FIX: izinkan admin menyimpan image_url produk dari dashboard.
+-- Tanpa policy UPDATE ini, Supabase mengembalikan "sukses" tapi
+-- 0 baris diubah (silent RLS) -> popup berhasil palsu, gambar hilang
+-- saat halaman dibuka ulang. Jalankan sekali saja.
+-- (Halaman admin sendiri sudah membatasi akses ke admin@azuraya.com)
+-- ========================================================
+drop policy if exists "Authenticated update product images" on public.products_cache;
+create policy "Authenticated update product images"
+  on public.products_cache for update
+  using (auth.role() = 'authenticated')
+  with check (auth.role() = 'authenticated');

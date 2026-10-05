@@ -157,12 +157,20 @@ function ProductImageCard({
 
       const combinedUrl = [url1, url2].filter(Boolean).join(',')
 
-      const { error } = await supabase
+      const { data: updated, error } = await supabase
         .from('products_cache')
         .update({ image_url: combinedUrl || null })
         .eq('id', product.id)
+        .select('id')
 
       if (error) throw error
+      // RLS tanpa policy UPDATE membuat PostgREST sukses tapi 0 baris diubah.
+      // Tanpa cek ini, popup "berhasil" palsu akan muncul padahal gambar tidak tersimpan.
+      if (!updated || updated.length === 0) {
+        throw new Error(
+          'Database menolak penyimpanan (0 baris diubah, kemungkinan policy RLS). Jalankan SQL "Authenticated update product images" di supabase.sql lalu coba lagi.'
+        )
+      }
 
       onSaved(combinedUrl)
       setMainFile(null)
