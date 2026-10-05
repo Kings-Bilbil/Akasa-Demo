@@ -1,5 +1,6 @@
 import { fetchAccurateAPI } from './accurate';
 import { createSalesInvoice, createSalesReceipt } from './accurateOrder';
+import { ensureAccurateCustomer } from './accurateCustomer';
 
 type AdminClient = ReturnType<typeof import('@/utils/supabase/admin').createAdminClient>;
 
@@ -47,7 +48,9 @@ export async function fulfillPaidOrder(
       accurate_sales_order_id,
       accurate_sales_receipt_id,
       branch_id,
+      customer_id,
       branches_cache(accurate_branch_id, name),
+      customers(full_name, email, accurate_customer_id),
       order_items(quantity, unit_price, products_cache(accurate_item_id))
     `)
     .eq('id', orderId)
@@ -69,6 +72,12 @@ export async function fulfillPaidOrder(
     await recordPaymentRow(supabase, orderId, opts, 'paid-duplicate-skipped');
     return { skipped: true, reason: 'already-fulfilled' };
   }
+
+  // 3b. Pastikan akun demo punya customer sendiri di Accurate (nama akun,
+  // bukan "Akasa"). Sekali dibuat, nomornya disimpan di customers dan dipakai
+  // ulang untuk pesanan berikutnya. Gagal -> fallback pelanggan generik.
+  const demoCustomerId = (order as { customer_id: string }).customer_id;
+  const customerNo = await ensureAccurateCustomer(supabase, demoCustomerId);
 
   const branchAccurateRaw = (
     (order as unknown as { branches_cache: { accurate_branch_id: string } }).branches_cache as unknown as { accurate_branch_id: string }
@@ -134,7 +143,7 @@ export async function fulfillPaidOrder(
   // Catat persis payload yang dikirim agar kegagalan seperti
   // "Detail dari transaksi belum diisi!" bisa ditelusuri tanpa tebak-tebakan.
   const payloadPreview =
-    `branch=${branchAccurateId} warehouse=${warehouseId ?? 'otomatis'} ` +
+    `branch=${branchAccurateId} warehouse=${warehouseId ?? 'otomatis'} customer=${customerNo} ` +
     `items=[${items.map((i) => `${i.accurate_item_id}:${i.qty}x@${i.price}`).join(', ')}]`;
   console.log(`[${opts.source}] Payload Faktur untuk ${orderId}: ${payloadPreview} (${warehouseNote})`);
 
@@ -147,7 +156,7 @@ export async function fulfillPaidOrder(
       console.log(`[${opts.source}] Faktur sudah ada (${invoiceId}), lanjut ke Penerimaan saja.`);
     } else {
       console.log(`[${opts.source}] Membuat Faktur Penjualan di cabang:`, branchAccurateId);
-      const siResult = await createSalesInvoice(branchAccurateId, items);
+      const siResult = await createSalesInvoice(branchAccurateId, items, customerNo);
 
       if (!siResult || !siResult.r || !siResult.r.id) {
         throw new Error('Respon Accurate tidak mengembalikan ID Faktur');
@@ -163,7 +172,7 @@ export async function fulfillPaidOrder(
     }
 
     console.log(`[${opts.source}] Membuat Penerimaan Penjualan (Lunas) untuk faktur:`, invoiceId);
-    const srResult = await createSalesReceipt(branchAccurateId, invoiceId, totalAmount);
+    const srResult = await createSalesReceipt(branchAccurateId, invoiceId, totalAmount, customerNo);
 
     if (srResult && srResult.r && srResult.r.id) {
       await supabase

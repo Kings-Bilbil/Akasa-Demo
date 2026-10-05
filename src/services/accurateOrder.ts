@@ -1,14 +1,15 @@
 import { fetchAccurateAPI } from './accurate';
+import { FALLBACK_CUSTOMER_NO } from './accurateCustomer';
 
-// Dibuat konfigurabel via env agar tidak menumpuk di satu pelanggan demo.
-// Fallback tetap ke nilai lama supaya demo yang sudah jalan tidak rusak.
-const ACCURATE_CUSTOMER_NO = process.env.ACCURATE_CUSTOMER_NO || 'C.00001'; // default lama: Budi Vape
+// Pelanggan generik lama ("Akasa"). Hanya dipakai sebagai fallback kalau
+// customer per-user gagal dibuat — lihat ensureAccurateCustomer().
+const ACCURATE_CUSTOMER_NO = FALLBACK_CUSTOMER_NO;
 const ACCURATE_BANK_NO = process.env.ACCURATE_BANK_NO || '110104'; // default lama: Kas Midtrans
 
-export async function createSalesOrder(branchId: number, items: {accurate_item_id: string, qty: number, price: number}[]) {
+export async function createSalesOrder(branchId: number, items: {accurate_item_id: string, qty: number, price: number}[], customerNo: string = ACCURATE_CUSTOMER_NO) {
   const payload = {
     branchId: branchId,
-    customerNo: ACCURATE_CUSTOMER_NO,
+    customerNo: customerNo,
     detailItem: items.map(i => ({
       itemNo: i.accurate_item_id,
       quantity: i.qty,
@@ -19,10 +20,10 @@ export async function createSalesOrder(branchId: number, items: {accurate_item_i
 }
 
 // OPSI B: Buat Faktur Penjualan langsung (Memotong stok fisik gudang)
-export async function createSalesInvoice(branchId: number, items: {accurate_item_id: string, qty: number, price: number, warehouseId?: number}[]) {
+export async function createSalesInvoice(branchId: number, items: {accurate_item_id: string, qty: number, price: number, warehouseId?: number}[], customerNo: string = ACCURATE_CUSTOMER_NO) {
   const payload = {
     branchId: branchId,
-    customerNo: ACCURATE_CUSTOMER_NO,
+    customerNo: customerNo,
     detailItem: items.map(i => ({
       itemNo: i.accurate_item_id,
       quantity: i.qty,
@@ -38,10 +39,10 @@ export async function createSalesInvoice(branchId: number, items: {accurate_item
 // Terbukti via uji langsung 2026-10-03: `detailItem` ditolak Accurate dengan
 // "Detail dari transaksi belum diisi!", sedangkan `detailInvoice` sukses
 // (receipt 110104.2026.10.00001 untuk faktur 650).
-export async function createSalesReceipt(branchId: number, invoiceId: number, totalAmount: number) {
+export async function createSalesReceipt(branchId: number, invoiceId: number, totalAmount: number, customerNo: string = ACCURATE_CUSTOMER_NO) {
   const payload = {
     branchId: branchId,
-    customerNo: ACCURATE_CUSTOMER_NO,
+    customerNo: customerNo,
     bankNo: ACCURATE_BANK_NO, // Akun Kas Midtrans sesuai setup di Accurate
     chequeAmount: totalAmount,
     detailInvoice: [
