@@ -24,7 +24,7 @@ export default async function AdminProductsPage() {
     <div>
       <PageHeader
         title='Pengaturan Gambar Produk'
-        description='Gambar yang diatur di sini akan langsung tampil di website dan tidak akan tertimpa saat sinkronisasi Accurate.'
+        description='Upload file gambar (JPG/PNG/WebP) dari perangkat. Gambar langsung tampil di website dan tidak akan tertimpa saat sinkronisasi Accurate. Jika upload gagal, jalankan SQL pembuatan bucket product-images di supabase.sql terlebih dahulu.'
       />
       <ProductList initialProducts={products || []} />
     </div>

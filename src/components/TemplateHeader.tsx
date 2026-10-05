@@ -138,9 +138,8 @@ export default function TemplateHeader() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
               {user.email !== "admin@azuraya.com" && (
                 <>
-                  <div style={{ position: "relative", width: "48px", height: "48px", backgroundColor: "#F6F4F0", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                  <div title="Keranjang segera hadir — gunakan Beli Sekarang untuk memesan" style={{ position: "relative", width: "48px", height: "48px", backgroundColor: "#F6F4F0", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", cursor: "not-allowed", opacity: 0.6 }}>
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
-                    <span style={{ position: "absolute", top: "-4px", right: "-4px", backgroundColor: "#F5C518", color: "#fff", fontSize: "12px", fontWeight: "bold", width: "22px", height: "22px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>3</span>
                   </div>
                   
                   <div style={{ position: "relative", width: "48px", height: "48px", backgroundColor: "#F5C518", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
