@@ -1,10 +1,10 @@
-import Image from 'next/image';
 import { createClient } from '@/utils/supabase/server';
 import { fetchAccurateAPI } from '@/services/accurate';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import CheckoutButton from '@/components/CheckoutButton';
 import TemplateHeader from '@/components/TemplateHeader';
+import ProductGallery from './ProductGallery';
 import './detail.css';
 
 export default async function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
@@ -23,9 +23,12 @@ export default async function ProductDetail({ params }: { params: Promise<{ id: 
 
   if (error || !product) return notFound();
   
-  const images = product.image_url ? product.image_url.split(',') : [];
-  const mainImage = images[0] || "/images/product-foom-tangy.png";
-  const thumb2 = images[1] || "/images/product-foom-tangy-2.png";
+  const storedImages = product.image_url
+    ? product.image_url.split(',').map((s: string) => s.trim()).filter(Boolean)
+    : [];
+  const galleryImages = storedImages.length > 0
+    ? storedImages
+    : ["/images/product-foom-tangy.png", "/images/product-foom-tangy-2.png"];
 
   let stockDetails: { name: string; balance: number }[] = [];
   let accurateError = null;
@@ -65,25 +68,7 @@ export default async function ProductDetail({ params }: { params: Promise<{ id: 
         </div>
         <div className="product-detail__inner">
           {/* Left Column: Images */}
-          <div className="product-detail__gallery">
-            <div className="product-detail__main-image">
-              <Image src={mainImage} alt={product.name} width={500} height={500} unoptimized />
-            </div>
-            <div className="product-detail__thumbnails">
-              <button className="gallery-nav gallery-nav--prev" aria-label="Previous image">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
-              </button>
-              <div className="thumbnail active">
-                <Image src={mainImage} alt="Thumbnail 1" width={100} height={100} unoptimized />
-              </div>
-              <div className="thumbnail">
-                <Image src={thumb2} alt="Thumbnail 2" width={100} height={100} unoptimized />
-              </div>
-              <button className="gallery-nav gallery-nav--next" aria-label="Next image">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
-              </button>
-            </div>
-          </div>
+          <ProductGallery images={galleryImages} name={product.name} />
 
           {/* Right Column: Info */}
           <div className="product-detail__info">

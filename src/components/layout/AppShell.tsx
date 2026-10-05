@@ -28,12 +28,6 @@ type AppShellProps = {
 
 const THEME_KEY = 'azuraya-admin-theme'
 
-// Script blocking yang ikut terkirim dalam HTML server agar class `dark`
-// sudah menempel di <html> SEBELUM browser menggambar pertama kali.
-// Tanpa ini, halaman sempat putih sepersekian detik (body pakai var --background
-// yang default-nya putih) baru gelap setelah hydration. Default Azuraya = gelap.
-const THEME_INIT_SCRIPT = `(function(){try{var s=localStorage.getItem('${THEME_KEY}');if(s!=='light'){document.documentElement.classList.add('dark')}}catch(e){try{document.documentElement.classList.add('dark')}catch(_){}}})();`
-
 // useLayoutEffect hanya di browser agar tidak muncul warning saat SSR
 const useIsoLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
 
@@ -83,8 +77,10 @@ const AppShell = ({ children, navItems, subtitle, userName, userEmail, fontClass
         isDark && 'dark'
       )}
     >
-      {/* Pasang tema gelap sebelum paint pertama (anti kedip putih) */}
-      <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      {/* Class `dark` pre-paint dipasang via next/script di root layout
+          (inline <script> mentah di dalam component client tidak dieksekusi
+          React dan memicu error "Encountered a script tag"). Runtime toggle
+          tetap ditangani effect di bawah. */}
       <TooltipProvider>
         <SidebarProvider defaultOpen={true}>
           <Suspense>
