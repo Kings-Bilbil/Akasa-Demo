@@ -80,8 +80,8 @@ export default function ProdukPage() {
 
             <div className="products-page__grid">
               {filteredProducts.map(product => {
-                const images = product.image_url ? product.image_url.split(',') : [];
-                const firstImage = images.length > 0 ? images[0] : "/images/product-1.png";
+                const images = product.image_url ? product.image_url.split(',').map((s: string) => s.trim()).filter(Boolean) : [];
+                const firstImage = images.length > 0 ? images[0].trim() : "/images/product-1.png";
                 
                 return (
                   <Link href={"/product/" + product.id} key={product.id} className="product-card">

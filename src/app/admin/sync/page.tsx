@@ -78,6 +78,10 @@ export default function AdminSyncPage() {
             <li>
               Anda <strong className='text-foreground'>menambahkan gudang/cabang baru</strong> di Accurate.
             </li>
+            <li>
+              Anda <strong className='text-foreground'>menghapus produk/cabang</strong> di Accurate (data yang
+              sudah tidak ada di Accurate akan ikut dihapus dari website).
+            </li>
           </ul>
 
           <Alert>

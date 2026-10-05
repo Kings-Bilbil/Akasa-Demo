@@ -146,14 +146,17 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
   const paymentMethod = liveMethod || (storedMethod ? prettifyMethod(storedMethod) : "Midtrans");
   const invoiceAccurate = order.accurate_sales_invoice_id || order.accurate_sales_order_id || "-";
   const receiptRaw = order.accurate_sales_receipt_id || "";
-  // Tanda "-" artinya penerimaan pelunasan belum tercatat di Accurate (baru faktur saja).
+  // receiptRaw adalah ID internal Penerimaan Penjualan di Accurate (contoh: "300"),
+  // bukan nominal uang — hanya bukti bahwa faktur sudah dilunasi di Accurate.
+  // Jangan tampilkan angka mentahnya ke pelanggan, cukup status "Lunas".
+  // Tanda kosong artinya penerimaan pelunasan belum tercatat di Accurate (baru faktur saja).
   // Alasan kegagalannya (kalau ada) diambil dari sync_logs agar ketahuan penyebabnya.
   const receiptErrorLog = Array.isArray(order.sync_logs)
     ? order.sync_logs.find((l) => l.status === "error" && asString(l.message, "") !== "")
     : undefined;
   const receiptErrorMsg = asString(receiptErrorLog?.message, "");
   const receiptAccurate = receiptRaw
-    ? receiptRaw
+    ? "Lunas"
     : receiptErrorMsg
       ? `Belum tercatat (${receiptErrorMsg.slice(0, 120)})`
       : "Belum tercatat";
