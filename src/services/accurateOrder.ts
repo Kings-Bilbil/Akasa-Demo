@@ -40,10 +40,10 @@ export async function createSalesInvoice(branchId: number, items: {accurate_item
 // "Detail dari transaksi belum diisi!", sedangkan `detailInvoice` sukses
 // (receipt 110104.2026.10.00001 untuk faktur 650).
 export async function createSalesReceipt(branchId: number, invoiceId: number, totalAmount: number, customerNo: string = ACCURATE_CUSTOMER_NO) {
-  const payload = {
+  const buildPayload = (bankNo: string) => ({
     branchId: branchId,
     customerNo: customerNo,
-    bankNo: ACCURATE_BANK_NO, // Akun Kas Midtrans sesuai setup di Accurate
+    bankNo: bankNo, // Akun Kas Midtrans (atau fallback Bank default 110102 pada data usaha baru)
     chequeAmount: totalAmount,
     detailInvoice: [
       {
@@ -51,6 +51,17 @@ export async function createSalesReceipt(branchId: number, invoiceId: number, to
         paymentAmount: totalAmount
       }
     ]
-  };
-  return await fetchAccurateAPI('/sales-receipt/save.do', 'POST', payload);
+  });
+
+  try {
+    return await fetchAccurateAPI('/sales-receipt/save.do', 'POST', buildPayload(ACCURATE_BANK_NO));
+  } catch (err) {
+    // Jika pada data usaha Accurate baru akun 110104 (Kas Midtrans) belum dibuat,
+    // gunakan akun bawaan Accurate "110102" (Bank) agar pelunasan tetap berhasil tercatat.
+    if (ACCURATE_BANK_NO !== '110102') {
+      console.warn(`[Accurate] Akun bank ${ACCURATE_BANK_NO} belum ada di data usaha baru, mencoba fallback ke 110102 (Bank)...`, err);
+      return await fetchAccurateAPI('/sales-receipt/save.do', 'POST', buildPayload('110102'));
+    }
+    throw err;
+  }
 }

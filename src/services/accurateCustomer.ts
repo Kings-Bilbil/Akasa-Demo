@@ -35,14 +35,56 @@ export async function ensureAccurateCustomer(
     .single();
 
   const row = data as unknown as CustomerRow | null;
-  if (row?.accurate_customer_id) return row.accurate_customer_id;
-
   const displayName =
     (row?.full_name || '').trim() ||
     (row?.email || '').split('@')[0] ||
     'Pelanggan Azuraya';
   const email = (row?.email || '').trim();
 
+  // 1. Jika di Supabase sudah tersimpan accurate_customer_id, pastikan nomor itu
+  //    benar-benar ada di database Accurate yang aktif saat ini (mengantisipasi
+  //    pergantian database trial Accurate baru yang mulai dari nol).
+  if (row?.accurate_customer_id) {
+    try {
+      const checkRes = await fetchAccurateAPI(
+        `/customer/list.do?fields=id,no&filter.keywords.op=EQUAL&filter.keywords.val=${encodeURIComponent(row.accurate_customer_id)}`
+      );
+      const list = (checkRes?.d as { no?: string }[] | undefined) || [];
+      if (list.some((c) => c.no === row.accurate_customer_id)) {
+        return row.accurate_customer_id;
+      }
+      console.warn(
+        `[Accurate] Nomor pelanggan lama ${row.accurate_customer_id} tidak ditemukan di data usaha Accurate saat ini. Membuat/mencari ulang...`
+      );
+    } catch {
+      // Jika pengecekan list gagal, lanjutkan ke pencocokan/pembuatan di bawah
+    }
+  }
+
+  // 2. Cari apakah pelanggan dengan email ini sudah ada di Accurate (mendukung member Bliss/Accurate)
+  if (email) {
+    try {
+      const searchRes = await fetchAccurateAPI(
+        `/customer/list.do?fields=id,no,name,email&filter.keywords.op=CONTAIN&filter.keywords.val=${encodeURIComponent(email)}`
+      );
+      const list = (searchRes?.d as { no?: string; email?: string }[] | undefined) || [];
+      const matched = list.find(
+        (c) => (c.email || '').trim().toLowerCase() === email.toLowerCase() && c.no
+      );
+      if (matched?.no) {
+        await supabase
+          .from('customers')
+          .update({ accurate_customer_id: matched.no })
+          .eq('id', customerId);
+        console.log(`[Accurate] Pelanggan ditemukan di Accurate (${email}): ${matched.no}`);
+        return matched.no;
+      }
+    } catch {
+      // Abaikan jika pencarian gagal, lanjut buat baru
+    }
+  }
+
+  // 3. Jika belum ada di Accurate, buat pelanggan baru via /customer/save.do
   try {
     const saveRes = await fetchAccurateAPI('/customer/save.do', 'POST', {
       name: displayName,
