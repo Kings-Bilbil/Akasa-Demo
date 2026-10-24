@@ -32,22 +32,32 @@ export default function TemplateHeader() {
   }, []);
 
   useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => {
-      if (data?.user) {
-        supabase.from('customers').select('full_name').eq('id', data.user.id).single().then((res) => {
-          setUser({ ...data.user, fullName: res.data?.full_name || 'User' });
-          setIsLoading(false);
-        }).catch(() => {
-          setUser(data.user);
-          setIsLoading(false);
-        });
-      } else {
-        setIsLoading(false);
+    let isMounted = true;
+    const fetchUser = async () => {
+      try {
+        const supabase = createClient();
+        const { data } = await supabase.auth.getUser();
+        if (data?.user && isMounted) {
+          const { data: customer } = await supabase
+            .from('customers')
+            .select('full_name')
+            .eq('id', data.user.id)
+            .single();
+          setUser({
+            ...data.user,
+            fullName: customer?.full_name || data.user.email?.split('@')[0] || 'User'
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching user:', err);
+      } finally {
+        if (isMounted) setIsLoading(false);
       }
-    }).catch(() => {
-      setIsLoading(false);
-    });
+    };
+    fetchUser();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, hash: string) => {

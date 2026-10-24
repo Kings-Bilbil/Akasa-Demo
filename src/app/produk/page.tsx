@@ -67,7 +67,7 @@ export default function ProdukPage() {
             </div>
 
             <div className="products-page__categories" style={{ justifyContent: 'center' }}>
-              {categories.map((cat: string) => (
+              {categories.map((cat: any) => (
                 <button 
                   key={cat} 
                   className={`category-btn ${activeCategory === cat ? 'category-btn--active' : ''}`}

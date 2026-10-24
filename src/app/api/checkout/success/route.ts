@@ -23,7 +23,7 @@ export async function POST(request: Request) {
       const result = await fulfillPaidOrder(supabase, orderId, {
         source: 'checkout-success',
       });
-      return NextResponse.json({ success: true, skipped: result.skipped, ...result });
+      return NextResponse.json({ success: true, ...result });
     } catch (fulfillError: unknown) {
       // Order sudah ditandai paid, hanya Accurate yang gagal — tetap balas sukses
       // supaya popup frontend tidak menakuti pembeli. Admin bisa lihat di sync_logs.

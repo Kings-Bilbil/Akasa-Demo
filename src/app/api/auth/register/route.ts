@@ -9,7 +9,7 @@ export async function POST(request: Request) {
   const password = formData.get('password') as string;
   
   if (email.toLowerCase() === 'admin@azuraya.com') {
-    return NextResponse.redirect(new URL(`/register?error=${encodeURIComponent("Email ini tidak dapat didaftarkan melalui form web.")}`, request.url));
+    return NextResponse.redirect(new URL(`/register?error=${encodeURIComponent("Email ini tidak dapat didaftarkan melalui form web.")}`, request.url), { status: 303 });
   }
 
   const supabase = await createClient();
@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   
   if (error) {
     console.error("Register error:", error);
-    return NextResponse.redirect(new URL(`/register?error=${encodeURIComponent(error.message)}`, request.url));
+    return NextResponse.redirect(new URL(`/register?error=${encodeURIComponent(error.message)}`, request.url), { status: 303 });
   }
   
   if (data.user) {
@@ -29,5 +29,5 @@ export async function POST(request: Request) {
     });
   }
   
-  return NextResponse.redirect(new URL('/login', request.url));
+  return NextResponse.redirect(new URL('/login', request.url), { status: 303 });
 }

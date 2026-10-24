@@ -47,6 +47,45 @@ type Variant = 'admin' | 'user'
 
 
 
+const RetryFulfillmentButton = ({ orderId }: { orderId: string }) => {
+  const [retrying, setRetrying] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  const handleRetry = async () => {
+    setRetrying(true);
+    setMsg(null);
+    try {
+      const res = await fetch('/api/admin/retry-fulfillment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Gagal');
+      setMsg('Sukses!');
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (err: unknown) {
+      setMsg(err instanceof Error ? err.message : 'Gagal');
+    } finally {
+      setRetrying(false);
+    }
+  };
+
+  return (
+    <div className='flex items-center gap-1.5 mt-1'>
+      <button
+        type='button'
+        disabled={retrying}
+        onClick={handleRetry}
+        className='text-[11px] font-medium text-amber-400 hover:text-amber-300 underline disabled:opacity-50 cursor-pointer'
+      >
+        {retrying ? 'Mengirim ulang...' : 'Kirim Ulang ke Accurate'}
+      </button>
+      {msg && <span className='text-[10px] text-muted-foreground'>({msg})</span>}
+    </div>
+  );
+};
+
 const AccurateBadge = ({ row }: { row: OrderRow }) => {
   // Prioritas: Faktur (benar) > SO lama > error > strip
   if (row.accurateInvoice) {
@@ -74,11 +113,12 @@ const AccurateBadge = ({ row }: { row: OrderRow }) => {
 
   if (row.isPaid && row.syncError) {
     return (
-      <div className='flex max-w-48 flex-col gap-0.5' title={row.syncError}>
+      <div className='flex max-w-56 flex-col gap-0.5' title={row.syncError}>
         <Badge variant='destructive' className='h-auto rounded-sm px-1.5'>
           Gagal kirim ke Accurate
         </Badge>
         <span className='text-destructive line-clamp-2 text-[11px] leading-tight whitespace-normal'>{row.syncError}</span>
+        <RetryFulfillmentButton orderId={row.id} />
       </div>
     )
   }

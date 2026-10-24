@@ -1,7 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { createAdminClient } from "@/utils/supabase/admin";
-import { notFound } from "next/navigation";
+import { createClient } from "@/utils/supabase/server";
+import { fetchAccurateAPI } from "@/services/accurate";
+import { notFound, redirect } from "next/navigation";
 import PrintButton from "./PrintButton";
 
 type InvoiceProductCache = {
@@ -28,6 +30,7 @@ type InvoiceSyncLog = {
 
 type InvoiceOrder = {
   id: string;
+  customer_id?: string | null;
   status: string;
   created_at: string;
   total_amount?: number | null;
@@ -75,18 +78,10 @@ function prettifyMethod(raw: string): string {
     snap: "Midtrans Snap",
   };
   if (direct[key]) return direct[key];
-  // bank_transfer ditangani terpisah karena butuh nama bank, sisanya dicantikkan umum
   return raw
     .replace(/[_-]+/g, " ")
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
-
-type MidtransStatus = {
-  payment_type?: string;
-  bank?: string;
-  store?: string;
-  va_numbers?: { bank?: string }[];
-};
 
 /** Tanya ke Midtrans (sandbox) metode bayar asli order ini. Gagal -> null (pakai fallback DB). */
 async function fetchMidtransMethod(orderId: string): Promise<string | null> {
@@ -98,20 +93,24 @@ async function fetchMidtransMethod(orderId: string): Promise<string | null> {
       cache: "no-store",
     });
     if (!res.ok) return null;
-    const data = (await res.json()) as MidtransStatus;
-    const paymentType = asString(data.payment_type, "");
-    if (!paymentType) return null;
-    if (paymentType.toLowerCase() === "bank_transfer") {
-      const bank = asString(data.va_numbers?.[0]?.bank || asString(data.bank, ""), "");
-      return bank ? `Transfer Bank ${bank.toUpperCase()}` : "Transfer Bank";
+    const body = (await res.json()) as {
+      payment_type?: string;
+      bank?: string;
+      store?: string;
+      va_numbers?: { bank?: string }[];
+    };
+    if (body.payment_type === "bank_transfer") {
+      const bank = body.va_numbers?.[0]?.bank || body.bank || "";
+      return bank ? `Transfer Bank (${bank.toUpperCase()})` : "Transfer Bank";
     }
-    if (paymentType.toLowerCase() === "cstore") {
-      const store = asString(data.store, "");
-      if (store.toLowerCase() === "alfamart") return "Alfamart";
-      if (store.toLowerCase() === "indomaret") return "Indomaret";
-      return store ? prettifyMethod(store) : "Gerai Ritel";
+    if (body.payment_type === "cstore") {
+      const store = body.store || "Minimarket";
+      return store.toUpperCase();
     }
-    return prettifyMethod(paymentType);
+    if (body.payment_type) {
+      return prettifyMethod(body.payment_type);
+    }
+    return null;
   } catch {
     return null;
   }
@@ -119,6 +118,11 @@ async function fetchMidtransMethod(orderId: string): Promise<string | null> {
 
 export default async function InvoicePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  
+  // 1. Keamanan Akses: Pastikan user terautentikasi dan merupakan pemilik order / admin
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
   const adminClient = createAdminClient();
   const { data } = await adminClient
     .from("orders")
@@ -127,8 +131,19 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
     )
     .eq("id", id)
     .single();
+
   const order = data as unknown as InvoiceOrder | null;
   if (!order || order.status !== "paid") {
+    notFound();
+  }
+
+  // Jika belum login, redirect ke halaman login
+  if (!user) {
+    redirect(`/login?redirect=/invoice/${id}`);
+  }
+
+  // Jika bukan pemilik pesanan dan bukan admin, tolak akses
+  if (user.id !== order.customer_id && user.email !== "admin@azuraya.com") {
     notFound();
   }
 
@@ -139,18 +154,31 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
   const customerEmail = order.customers?.email || "-";
   const items = Array.isArray(order.order_items) ? order.order_items : [];
   const totalAmount = asNumber(order.total_amount, 0);
-  // Metode bayar asli (mis. DANA, QRIS, GoPay, Transfer Bank BCA): tanya Midtrans dulu,
-  // kalau gagal pakai catatan payments, terakhir fallback "Midtrans".
+
   const storedMethod = asString(order.payments?.[0]?.method, "");
   const liveMethod = await fetchMidtransMethod(order.id);
   const paymentMethod = liveMethod || (storedMethod ? prettifyMethod(storedMethod) : "Midtrans");
-  const invoiceAccurate = order.accurate_sales_invoice_id || order.accurate_sales_order_id || "-";
+
+  // 2. Ambil Nomor Faktur Resmi Kasir dari Accurate (misal: "SI.2026.10.00001")
+  let accurateInvoiceNo: string | null = null;
+  if (order.accurate_sales_invoice_id) {
+    try {
+      const detail = await fetchAccurateAPI(`/sales-invoice/detail.do?id=${encodeURIComponent(order.accurate_sales_invoice_id)}`);
+      if (detail && detail.d && detail.d.number) {
+        accurateInvoiceNo = detail.d.number;
+      }
+    } catch {
+      // Fallback
+    }
+  }
+
+  const invoiceAccurate = accurateInvoiceNo 
+    ? accurateInvoiceNo 
+    : order.accurate_sales_invoice_id 
+      ? `Faktur #${order.accurate_sales_invoice_id}` 
+      : "-";
+
   const receiptRaw = order.accurate_sales_receipt_id || "";
-  // receiptRaw adalah ID internal Penerimaan Penjualan di Accurate (contoh: "300"),
-  // bukan nominal uang — hanya bukti bahwa faktur sudah dilunasi di Accurate.
-  // Jangan tampilkan angka mentahnya ke pelanggan, cukup status "Lunas".
-  // Tanda kosong artinya penerimaan pelunasan belum tercatat di Accurate (baru faktur saja).
-  // Alasan kegagalannya (kalau ada) diambil dari sync_logs agar ketahuan penyebabnya.
   const receiptErrorLog = Array.isArray(order.sync_logs)
     ? order.sync_logs.find((l) => l.status === "error" && asString(l.message, "") !== "")
     : undefined;
@@ -160,6 +188,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
     : receiptErrorMsg
       ? `Belum tercatat (${receiptErrorMsg.slice(0, 120)})`
       : "Belum tercatat";
+
   const paidDate = new Date(order.created_at).toLocaleDateString("id-ID", {
     day: "numeric",
     month: "long",
@@ -168,7 +197,6 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
 
   const rows = items.map((item) => {
     const qty = asNumber(item.quantity, 1) || 1;
-    // Kolom di DB adalah unit_price (bug lama pakai item.price selalu 0, sudah dibetulkan di sini)
     const unit = asNumber(item.unit_price, asNumber(item.price, 0));
     return {
       name: item.products_cache?.name || "Produk",
@@ -179,148 +207,190 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
   });
 
   return (
-    <main className="relative min-h-screen w-full max-w-full overflow-x-hidden bg-black text-white" style={{ fontFamily: "var(--font-primary), Arial, sans-serif", width: "100%", maxWidth: "100%", overflowX: "hidden", background: "#000" }}>
-      {/* Latar luar: hitam + segitiga cahaya khas Azuraya */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden print:hidden">
-        <div className="flash-light flash-light--left" />
-        <div className="flash-light flash-light--right" />
-      </div>
+    <>
+      {/* 3. Gaya Khusus Cetak PDF (@media print): Background Putih, Huruf Hitam, Tata Letak Kertas A4 */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media print {
+          @page {
+            margin: 12mm;
+            size: auto;
+          }
+          body, html, main {
+            background-color: #ffffff !important;
+            color: #111827 !important;
+            background: #ffffff !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          .print\\:hidden, button, a[href="/dashboard"], a[href="/admin"] {
+            display: none !important;
+          }
+          div, p, span, h1, h2, h3, h4, strong, td, th {
+            color: #111827 !important;
+            text-shadow: none !important;
+          }
+          [data-layout="v4-inline"] > div {
+            background-color: #ffffff !important;
+            border: 1px solid #e5e7eb !important;
+            box-shadow: none !important;
+          }
+          tr.border-b {
+            border-color: #e5e7eb !important;
+          }
+          .border-b-2 {
+            border-bottom: 2px solid #ca8a04 !important;
+          }
+          h3.text-\\[\\#F5C518\\] {
+            color: #854d0e !important;
+          }
+          span.rounded-full {
+            border: 2px solid #16a34a !important;
+            color: #16a34a !important;
+            background-color: #f0fdf4 !important;
+          }
+        }
+      `}} />
 
-      <div data-layout="v4-inline" className="relative z-10 mx-auto box-border w-full min-w-0 max-w-3xl px-4 pb-16 pt-10 sm:px-6" style={{ width: "100%", maxWidth: "720px", marginLeft: "auto", marginRight: "auto", paddingLeft: "16px", paddingRight: "16px", paddingTop: "40px", paddingBottom: "64px", boxSizing: "border-box", position: "relative", zIndex: 10 }}>
-        <div className="mb-6 print:hidden">
-          <Link href="/dashboard" className="inline-flex items-center gap-2 text-gray-400 transition-colors hover:text-yellow-500">
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <line x1="19" y1="12" x2="5" y2="12"></line>
-              <polyline points="12 19 5 12 12 5"></polyline>
-            </svg>
-            <span className="font-medium">Kembali</span>
-          </Link>
+      <main className="relative min-h-screen w-full max-w-full overflow-x-hidden bg-black text-white" style={{ fontFamily: "var(--font-primary), Arial, sans-serif", width: "100%", maxWidth: "100%", overflowX: "hidden", background: "#000" }}>
+        {/* Latar luar: hitam + segitiga cahaya khas Azuraya */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden print:hidden">
+          <div className="flash-light flash-light--left" />
+          <div className="flash-light flash-light--right" />
         </div>
-        <div className="w-full min-w-0 max-w-full rounded-3xl border border-white/10 bg-[#141414]" style={{ width: "100%", maxWidth: "100%", minWidth: 0, overflow: "visible", borderRadius: "24px", border: "1px solid rgba(255,255,255,0.1)", background: "#141414", boxSizing: "border-box" }}>
-          {/* Header: logo + INVOICE */}
-          <div className="flex w-full min-w-0 flex-col gap-6 border-b-2 border-[#F5C518] p-6 sm:flex-row sm:items-start sm:justify-between sm:p-8" style={{ display: "flex", flexWrap: "wrap", gap: "24px", width: "100%", maxWidth: "100%", boxSizing: "border-box", borderBottom: "2px solid #F5C518", padding: "24px" }}>
-            <div className="flex min-w-0 flex-1 items-center gap-4" style={{ display: "flex", alignItems: "center", gap: "16px", minWidth: 0, flex: "1 1 280px" }}>
-              <Image src="/images/logo.png" alt="Logo Azuraya Grup" width={90} height={57} className="shrink-0 object-contain" />
-              <div className="min-w-0 flex-1" style={{ minWidth: 0, flex: 1 }}>
-                <h1 className="text-3xl font-bold tracking-tight break-words sm:text-4xl" style={{ overflowWrap: "break-word" }}>
-                  <span className="text-white">INVOICE</span>
-                </h1>
-                <p className="mt-1 break-all font-mono text-sm text-white/60">#{shortId}</p>
-                <span className="mt-3 inline-block rounded-full border-2 border-green-500 px-3 py-1 text-xs font-black tracking-widest text-green-400">
-                  LUNAS
-                </span>
-              </div>
-            </div>
-            <div className="w-full min-w-0 shrink-0 text-sm leading-6 [overflow-wrap:anywhere] sm:w-auto sm:max-w-[240px] sm:text-right" style={{ minWidth: 0, flex: "1 1 200px", maxWidth: "100%", overflowWrap: "anywhere", wordBreak: "break-word" }}>
-              <div className="break-words text-white/60">
-                <strong className="text-white">Invoice #:</strong> INV-{shortId}
-              </div>
-              <div className="break-words text-white/60">
-                <strong className="text-white">Tanggal:</strong> {paidDate}
-              </div>
-              <div className="break-words text-white/60">
-                <strong className="text-white">Metode:</strong> {paymentMethod}
-              </div>
-            </div>
-          </div>
 
-          {/* Dari & Kepada */}
-          <div className="flex w-full min-w-0 flex-col gap-8 p-6 sm:flex-row sm:justify-between sm:p-8" style={{ display: "flex", flexWrap: "wrap", gap: "32px", width: "100%", maxWidth: "100%", boxSizing: "border-box", padding: "24px" }}>
-            <div className="w-full min-w-0 flex-1 sm:max-w-[45%]" style={{ minWidth: 0, flex: "1 1 220px", maxWidth: "100%" }}>
-              <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-[#F5C518]">Dari</h3>
-              <p className="font-bold text-white">Azuraya Grup</p>
-              <p className="break-words text-white/70" style={{ overflowWrap: "break-word" }}>{branchName}</p>
-              <p className="break-words text-white/70" style={{ overflowWrap: "break-word" }}>{branchAddress}</p>
-              <p className="mt-2 break-all text-sm text-white/60">Faktur Accurate: {invoiceAccurate}</p>
-            </div>
-            <div className="w-full min-w-0 flex-1 sm:max-w-[45%] sm:text-right" style={{ minWidth: 0, flex: "1 1 220px", maxWidth: "100%", overflowWrap: "anywhere" }}>
-              <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-[#F5C518]">Kepada</h3>
-              <p className="break-words font-bold text-white" style={{ overflowWrap: "break-word" }}>{customerName}</p>
-              <p className="break-all text-white/70">{customerEmail}</p>
-              <p className="mt-2 break-all text-sm text-white/60">Pelunasan: {receiptAccurate}</p>
-            </div>
+        <div data-layout="v4-inline" className="relative z-10 mx-auto box-border w-full min-w-0 max-w-3xl px-4 pb-16 pt-10 sm:px-6" style={{ width: "100%", maxWidth: "720px", marginLeft: "auto", marginRight: "auto", paddingLeft: "16px", paddingRight: "16px", paddingTop: "40px", paddingBottom: "64px", boxSizing: "border-box", position: "relative", zIndex: 10 }}>
+          <div className="mb-6 print:hidden">
+            <Link href="/dashboard" className="inline-flex items-center gap-2 text-gray-400 transition-colors hover:text-yellow-500">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+              </svg>
+              <span className="font-medium">Kembali</span>
+            </Link>
           </div>
+          <div className="w-full min-w-0 max-w-full rounded-3xl border border-white/10 bg-[#141414]" style={{ width: "100%", maxWidth: "100%", minWidth: 0, overflow: "visible", borderRadius: "24px", border: "1px solid rgba(255,255,255,0.1)", background: "#141414", boxSizing: "border-box" }}>
+            {/* Header: logo + INVOICE */}
+            <div className="flex w-full min-w-0 flex-col gap-6 border-b-2 border-[#F5C518] p-6 sm:flex-row sm:items-start sm:justify-between sm:p-8" style={{ display: "flex", flexWrap: "wrap", gap: "24px", width: "100%", maxWidth: "100%", boxSizing: "border-box", borderBottom: "2px solid #F5C518", padding: "24px" }}>
+              <div className="flex min-w-0 flex-1 items-center gap-4" style={{ display: "flex", alignItems: "center", gap: "16px", minWidth: 0, flex: "1 1 280px" }}>
+                <Image src="/images/logo.png" alt="Logo Azuraya Grup" width={90} height={57} className="shrink-0 object-contain" />
+                <div className="min-w-0 flex-1" style={{ minWidth: 0, flex: 1 }}>
+                  <h1 className="text-3xl font-bold tracking-tight break-words sm:text-4xl" style={{ overflowWrap: "break-word" }}>
+                    <span className="text-white">INVOICE</span>
+                  </h1>
+                  <p className="mt-1 break-all font-mono text-sm text-white/60">#{shortId}</p>
+                  <span className="mt-3 inline-block rounded-full border-2 border-green-500 px-3 py-1 text-xs font-black tracking-widest text-green-400">
+                    LUNAS
+                  </span>
+                </div>
+              </div>
+              <div className="w-full min-w-0 shrink-0 text-sm leading-6 [overflow-wrap:anywhere] sm:w-auto sm:max-w-[240px] sm:text-right" style={{ minWidth: 0, flex: "1 1 200px", maxWidth: "100%", overflowWrap: "anywhere", wordBreak: "break-word" }}>
+                <div className="break-words text-white/60">
+                  <strong className="text-white">Invoice #:</strong> INV-{shortId}
+                </div>
+                <div className="break-words text-white/60">
+                  <strong className="text-white">Tanggal:</strong> {paidDate}
+                </div>
+                <div className="break-words text-white/60">
+                  <strong className="text-white">Metode:</strong> {paymentMethod}
+                </div>
+              </div>
+            </div>
 
-          {/* Tabel barang */}
-          <div className="w-full min-w-0 px-4 sm:px-8" style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box", paddingLeft: "16px", paddingRight: "16px" }}>
-            <div className="w-full min-w-0 overflow-x-auto" style={{ width: "100%", maxWidth: "100%", overflowX: "auto" }}>
-            <table className="w-full min-w-0 border-collapse">
-              <thead>
-                <tr className="border-b border-white/10 text-left text-xs uppercase tracking-widest text-white/60">
-                  <th className="py-3 pr-3 font-bold">Deskripsi</th>
-                  <th className="py-3 pr-3 text-right font-bold">Qty</th>
-                  <th className="py-3 pr-3 text-right font-bold">Harga Satuan</th>
-                  <th className="py-3 text-right font-bold">Subtotal</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((r, idx) => (
-                  <tr key={idx} className="border-b border-white/5">
-                    <td className="break-words py-3 pr-3 text-white">{r.name}</td>
-                    <td className="whitespace-nowrap py-3 pr-3 text-right text-white/80">{r.qty}x</td>
-                    <td className="whitespace-nowrap py-3 pr-3 text-right text-white/70">{formatRp(r.unit)}</td>
-                    <td className="whitespace-nowrap py-3 text-right font-medium text-white">{formatRp(r.subtotal)}</td>
+            {/* Dari & Kepada */}
+            <div className="flex w-full min-w-0 flex-col gap-8 p-6 sm:flex-row sm:justify-between sm:p-8" style={{ display: "flex", flexWrap: "wrap", gap: "32px", width: "100%", maxWidth: "100%", boxSizing: "border-box", padding: "24px" }}>
+              <div className="w-full min-w-0 flex-1 sm:max-w-[45%]" style={{ minWidth: 0, flex: "1 1 220px", maxWidth: "100%" }}>
+                <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-[#F5C518]">Dari</h3>
+                <p className="font-bold text-white">Azuraya Grup</p>
+                <p className="break-words text-white/70" style={{ overflowWrap: "break-word" }}>{branchName}</p>
+                <p className="break-words text-white/70" style={{ overflowWrap: "break-word" }}>{branchAddress}</p>
+                <p className="mt-2 break-all text-sm text-white/60">Faktur Kasir: <strong className="text-white font-mono">{invoiceAccurate}</strong></p>
+              </div>
+              <div className="w-full min-w-0 flex-1 sm:max-w-[45%] sm:text-right" style={{ minWidth: 0, flex: "1 1 220px", maxWidth: "100%", overflowWrap: "anywhere" }}>
+                <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-[#F5C518]">Kepada</h3>
+                <p className="break-words font-bold text-white" style={{ overflowWrap: "break-word" }}>{customerName}</p>
+                <p className="break-all text-white/70">{customerEmail}</p>
+                <p className="mt-2 break-all text-sm text-white/60">Pelunasan: {receiptAccurate}</p>
+              </div>
+            </div>
+
+            {/* Tabel barang */}
+            <div className="w-full min-w-0 px-4 sm:px-8" style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box", paddingLeft: "16px", paddingRight: "16px" }}>
+              <div className="w-full min-w-0 overflow-x-auto" style={{ width: "100%", maxWidth: "100%", overflowX: "auto" }}>
+              <table className="w-full min-w-0 border-collapse">
+                <thead>
+                  <tr className="border-b border-white/10 text-left text-xs uppercase tracking-widest text-white/60">
+                    <th className="py-3 pr-3 font-bold">Deskripsi</th>
+                    <th className="py-3 px-3 text-center font-bold">Qty</th>
+                    <th className="py-3 px-3 text-right font-bold">Harga</th>
+                    <th className="py-3 pl-3 text-right font-bold">Subtotal</th>
                   </tr>
-                ))}
-                {rows.length === 0 && (
+                </thead>
+                <tbody>
+                  {rows.map((row, idx) => (
+                    <tr key={idx} className="border-b border-white/5 text-sm">
+                      <td className="py-3.5 pr-3 font-medium text-white">{row.name}</td>
+                      <td className="py-3.5 px-3 text-center text-white/80">{row.qty}</td>
+                      <td className="py-3.5 px-3 text-right text-white/80">{formatRp(row.unit)}</td>
+                      <td className="py-3.5 pl-3 text-right font-medium text-white">{formatRp(row.subtotal)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              </div>
+            </div>
+
+            {/* Ringkasan Biaya */}
+            <div className="p-6 sm:p-8" style={{ padding: "24px", boxSizing: "border-box" }}>
+              <table className="ml-auto w-full max-w-[280px] text-sm">
+                <tbody>
                   <tr>
-                    <td colSpan={4} className="py-6 text-center text-white/50">
-                      Tidak ada item pada pesanan ini.
+                    <td className="py-1 text-white/70">Subtotal:</td>
+                    <td className="py-1 text-right text-white">{formatRp(totalAmount)}</td>
+                  </tr>
+                  <tr>
+                    <td className="py-1 text-white/70">Pajak:</td>
+                    <td className="py-1 text-right text-white">Rp 0 (termasuk)</td>
+                  </tr>
+                  <tr>
+                    <td className="border-t-2 border-[#F5C518] pt-3 text-lg font-bold text-white">Total:</td>
+                    <td className="border-t-2 border-[#F5C518] pt-3 text-right text-lg font-bold text-[#F5C518]">
+                      {formatRp(totalAmount)}
                     </td>
                   </tr>
-                )}
-              </tbody>
-            </table>
+                </tbody>
+              </table>
             </div>
 
-            {/* Total */}
-            <table className="ml-auto mt-6 w-full max-w-[300px]">
-              <tbody>
-                <tr>
-                  <td className="py-1 text-white/70">Subtotal:</td>
-                  <td className="py-1 text-right text-white">{formatRp(totalAmount)}</td>
-                </tr>
-                <tr>
-                  <td className="py-1 text-white/70">Pajak:</td>
-                  <td className="py-1 text-right text-white">Rp 0 (termasuk)</td>
-                </tr>
-                <tr>
-                  <td className="border-t-2 border-[#F5C518] pt-3 text-lg font-bold text-white">Total:</td>
-                  <td className="border-t-2 border-[#F5C518] pt-3 text-right text-lg font-bold text-[#F5C518]">
-                    {formatRp(totalAmount)}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          {/* Catatan */}
-          <div className="p-6 sm:p-8" style={{ padding: "24px", boxSizing: "border-box" }}>
-            <div
-              className="rounded-xl bg-white/5 text-sm leading-6 text-white/80"
-              style={{
-                background: "rgba(255,255,255,0.05)",
-                borderRadius: "12px",
-                padding: "20px 24px",
-                fontSize: "14px",
-                lineHeight: "1.7",
-                overflowWrap: "break-word",
-                boxSizing: "border-box",
-              }}
-            >
-              <strong className="text-white">Catatan:</strong>
-              <br />
-              Terima kasih telah berbelanja di Azuraya Grup. Tunjukkan invoice ini saat pengambilan
-              barang di {branchName}.
-              <br />
-              Dokumen ini adalah bukti pembayaran yang sah.
-            </div>
-            <div className="mt-6 text-center print:hidden">
-              <PrintButton />
+            {/* Catatan */}
+            <div className="p-6 sm:p-8" style={{ padding: "24px", boxSizing: "border-box" }}>
+              <div
+                className="rounded-xl bg-white/5 text-sm leading-6 text-white/80"
+                style={{
+                  background: "rgba(255,255,255,0.05)",
+                  borderRadius: "12px",
+                  padding: "20px 24px",
+                  fontSize: "14px",
+                  lineHeight: "1.7",
+                  overflowWrap: "break-word",
+                  boxSizing: "border-box",
+                }}
+              >
+                <strong className="text-white">Catatan:</strong>
+                <br />
+                Terima kasih telah berbelanja di Azuraya Grup. Tunjukkan invoice ini saat pengambilan
+                barang di {branchName}.
+                <br />
+                Dokumen ini adalah bukti pembayaran yang sah.
+              </div>
+              <div className="mt-6 text-center print:hidden">
+                <PrintButton />
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </>
   );
 }

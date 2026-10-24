@@ -13,8 +13,6 @@ export default async function ProductDetail({ params }: { params: Promise<{ id: 
   
   const { data: { user } } = await supabase.auth.getUser();
 
-
-  
   const { data: product, error } = await supabase
     .from('products_cache')
     .select('*')
@@ -31,11 +29,15 @@ export default async function ProductDetail({ params }: { params: Promise<{ id: 
     : ["/images/product-foom-tangy.png", "/images/product-foom-tangy-2.png"];
 
   let stockDetails: { name: string; balance: number }[] = [];
-  let accurateError = null;
+  let accurateError: string | null = null;
 
   try {
-    const accurateResponse = await fetchAccurateAPI('/item/detail.do?no=' + product.accurate_item_id);
-    stockDetails = accurateResponse.d?.detailWarehouseData || [];
+    const cleanItemNo = encodeURIComponent((product.accurate_item_id || '').trim());
+    const accurateResponse = await fetchAccurateAPI(`/item/detail.do?no=${cleanItemNo}`);
+    stockDetails = accurateResponse?.d?.detailWarehouseData || [];
+    if (accurateResponse?.s === false) {
+      accurateError = "Gagal memuat stok live dari Accurate.";
+    }
   } catch {
     accurateError = "Gagal mengambil stok live dari Accurate.";
   }
@@ -43,14 +45,21 @@ export default async function ProductDetail({ params }: { params: Promise<{ id: 
   const { data: dbBranches } = await supabase.from('branches_cache').select('id, name');
   
   const checkoutBranches = dbBranches?.map(dbBranch => {
-    let stock = undefined;
+    let stock = 0;
     if (!accurateError) {
-      const cleanName = (name: string) => name.toLowerCase().replace('gudang', '').replace('cabang', '').trim();
-      const targetName = cleanName(dbBranch.name);
-      const stockItem = stockDetails.find((s: { name: string; balance: number }) => cleanName(s.name) === targetName);
-      stock = stockItem ? stockItem.balance : 0;
+      const normalize = (name: string) =>
+        name.toLowerCase()
+          .replace(/gudang|cabang|pusat|toko|utama/gi, '')
+          .replace(/[^a-z0-9]/g, '')
+          .trim();
+      const targetName = normalize(dbBranch.name);
+      const stockItem = stockDetails.find((s: { name: string; balance: number }) => {
+        const whName = normalize(s.name);
+        return whName === targetName || whName.includes(targetName) || targetName.includes(whName);
+      });
+      stock = stockItem && typeof stockItem.balance === 'number' ? Math.max(0, stockItem.balance) : 0;
     }
-    return { ...dbBranch, stock };
+    return { ...dbBranch, stock, stockError: !!accurateError };
   }) || [];
 
   return (
@@ -85,7 +94,7 @@ export default async function ProductDetail({ params }: { params: Promise<{ id: 
               </div>
             </div>
             
-            <p className="product-detail__subtitle">Liquid - 60 ml - Nikotin 3%</p>
+            <p className="product-detail__subtitle">{product.category || 'Liquid'} - Koleksi Resmi Azuraya</p>
             
             <div className="product-detail__pricing flex flex-col gap-1 mb-4">
               <span className="price-current text-gold font-bold" style={{ color: 'var(--color-gold)', fontSize: '36px' }}>Rp {product.price.toLocaleString('id-ID')}</span>
@@ -93,7 +102,6 @@ export default async function ProductDetail({ params }: { params: Promise<{ id: 
             </div>
             
             <hr className="product-detail__divider" />
-            
             
             <CheckoutButton 
               product={product} 
@@ -136,19 +144,3 @@ export default async function ProductDetail({ params }: { params: Promise<{ id: 
     </>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -4,7 +4,7 @@ import { ensureAccurateCustomer } from './accurateCustomer';
 
 type AdminClient = ReturnType<typeof import('@/utils/supabase/admin').createAdminClient>;
 
-export type FulfillSource = 'webhook' | 'checkout-success';
+export type FulfillSource = 'webhook' | 'checkout-success' | 'admin-retry';
 
 export type FulfillResult = {
   skipped: boolean;

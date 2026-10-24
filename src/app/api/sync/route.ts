@@ -1,9 +1,20 @@
 import { NextResponse } from 'next/server';
 import { fetchAccurateAPI } from '@/services/accurate';
 import { createAdminClient } from '@/utils/supabase/admin';
+import { createClient } from '@/utils/supabase/server';
 
 export async function POST() {
   try {
+    // 0. Keamanan: Hanya admin@azuraya.com yang diizinkan menjalankan sinkronisasi
+    const authClient = await createClient();
+    const { data: { user } } = await authClient.auth.getUser();
+    if (!user || user.email !== 'admin@azuraya.com') {
+      return NextResponse.json(
+        { success: false, error: 'Akses ditolak: Hanya admin yang dapat menjalankan sinkronisasi.' },
+        { status: 403 }
+      );
+    }
+
     const supabase = createAdminClient();
 
     // 1. Ambil data cabang dari Accurate
@@ -21,13 +32,39 @@ export async function POST() {
       if (error) console.error("Error upsert branch:", error);
     }
 
-    // 3. Ambil data barang dari Accurate (INV) beserta kategorinya
-    const itemsResponse = await fetchAccurateAPI('/item/list.do?fields=id,no,name,unitPrice,itemCategory');
-    const items = itemsResponse.d || [];
+    // 3. Poin 25 FIX: Ambil SELURUH data barang dari Accurate dengan paginasi loop
+    // (mengantisipasi jika katalog produk memiliki lebih dari 100 item di Accurate)
+    type AccurateItem = {
+      id: number;
+      no: string;
+      name?: string;
+      modifierName?: string;
+      unitPrice?: number;
+      itemCategory?: { name?: string };
+    };
+
+    const allItems: AccurateItem[] = [];
+    let page = 1;
+    let hasMore = true;
+
+    while (hasMore) {
+      const pageResponse = await fetchAccurateAPI(
+        `/item/list.do?fields=id,no,name,unitPrice,itemCategory&sp.page=${page}&sp.pageSize=100`
+      );
+      const pageList = (pageResponse?.d as AccurateItem[]) || [];
+      allItems.push(...pageList);
+
+      const pageCount = pageResponse?.sp?.pageCount || 1;
+      if (page >= pageCount || pageList.length === 0) {
+        hasMore = false;
+      } else {
+        page++;
+      }
+    }
 
     // 4. Simpan barang ke Supabase (Upsert)
     let syncedItemsCount = 0;
-    for (const item of items) {
+    for (const item of allItems) {
       const categoryName = item.itemCategory?.name || 'Uncategorized';
 
       const { error } = await supabase.from('products_cache').upsert({
@@ -52,7 +89,7 @@ export async function POST() {
     let deletedProductsCount = 0;
     let keptProductsCount = 0;
     const accurateItemNos = new Set(
-      items.map((i: { no?: unknown }) => String(i?.no ?? '')).filter(Boolean)
+      allItems.map((i) => String(i?.no ?? '')).filter(Boolean)
     );
     if (accurateItemNos.size > 0) {
       const { data: existingProducts } = await supabase
@@ -72,7 +109,6 @@ export async function POST() {
         keptProductsCount = stale.length - deletable.length;
 
         for (const p of deletable) {
-          // Bersihkan file gambar produk dari Storage (best-effort, gagal = abaikan)
           try {
             const { data: files } = await supabase.storage
               .from('product-images')
@@ -99,7 +135,6 @@ export async function POST() {
     }
 
     // 6. Hapus cabang yang sudah tidak ada di Accurate.
-    // Cabang yang sudah dipakai order dipertahankan agar histori tidak rusak.
     let deletedBranchesCount = 0;
     const accurateBranchIds = new Set(
       branches.map((b: { id?: unknown }) => String(b?.id ?? '')).filter(Boolean)
@@ -119,7 +154,7 @@ export async function POST() {
           .in('branch_id', staleBranchIds);
         const usedBranchSet = new Set((usedOrders || []).map((r: { branch_id: string }) => r.branch_id));
         for (const b of staleBranches) {
-          if (usedBranchSet.has(b.id)) continue; // dipakai order -> pertahankan
+          if (usedBranchSet.has(b.id)) continue;
           const { error: delError } = await supabase
             .from('branches_cache')
             .delete()

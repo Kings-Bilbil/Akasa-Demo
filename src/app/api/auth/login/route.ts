@@ -10,13 +10,13 @@ export async function POST(request: Request) {
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   
   if (error) {
-    return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error.message)}`, request.url));
+    return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error.message)}`, request.url), { status: 303 });
   }
   
   if (email === 'admin@azuraya.com') {
-    return NextResponse.redirect(new URL('/admin', request.url));
+    return NextResponse.redirect(new URL('/admin', request.url), { status: 303 });
   }
   
-  return NextResponse.redirect(new URL('/', request.url));
+  return NextResponse.redirect(new URL('/', request.url), { status: 303 });
 }
 
