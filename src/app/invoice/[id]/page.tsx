@@ -160,10 +160,14 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
   const paymentMethod = liveMethod || (storedMethod ? prettifyMethod(storedMethod) : "Midtrans");
 
   // 2. Ambil Nomor Faktur Resmi Kasir dari Accurate (misal: "SI.2026.10.00001")
+  const rawInvoiceId = order.accurate_sales_invoice_id || "";
+  const isInvoiceLock = rawInvoiceId.startsWith("LOCK:");
+  const cleanInvoiceId = !isInvoiceLock && rawInvoiceId ? rawInvoiceId : "";
+
   let accurateInvoiceNo: string | null = null;
-  if (order.accurate_sales_invoice_id) {
+  if (cleanInvoiceId) {
     try {
-      const detail = await fetchAccurateAPI(`/sales-invoice/detail.do?id=${encodeURIComponent(order.accurate_sales_invoice_id)}`);
+      const detail = await fetchAccurateAPI(`/sales-invoice/detail.do?id=${encodeURIComponent(cleanInvoiceId)}`);
       if (detail && detail.d && detail.d.number) {
         accurateInvoiceNo = detail.d.number;
       }
@@ -174,20 +178,26 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
 
   const invoiceAccurate = accurateInvoiceNo 
     ? accurateInvoiceNo 
-    : order.accurate_sales_invoice_id 
-      ? `Faktur #${order.accurate_sales_invoice_id}` 
-      : "-";
+    : cleanInvoiceId 
+      ? `Faktur #${cleanInvoiceId}` 
+      : isInvoiceLock
+        ? "Sedang diterbitkan..."
+        : "-";
 
-  const receiptRaw = order.accurate_sales_receipt_id || "";
+  const rawReceiptId = order.accurate_sales_receipt_id || "";
+  const isReceiptLock = rawReceiptId.startsWith("LOCK:");
+  const receiptRaw = !isReceiptLock && rawReceiptId ? rawReceiptId : "";
   const receiptErrorLog = Array.isArray(order.sync_logs)
     ? order.sync_logs.find((l) => l.status === "error" && asString(l.message, "") !== "")
     : undefined;
   const receiptErrorMsg = asString(receiptErrorLog?.message, "");
   const receiptAccurate = receiptRaw
     ? "Lunas"
-    : receiptErrorMsg
-      ? `Belum tercatat (${receiptErrorMsg.slice(0, 120)})`
-      : "Belum tercatat";
+    : isReceiptLock
+      ? "Sedang diproses..."
+      : receiptErrorMsg
+        ? `Belum tercatat (${receiptErrorMsg.slice(0, 120)})`
+        : "Belum tercatat";
 
   const paidDate = new Date(order.created_at).toLocaleDateString("id-ID", {
     day: "numeric",

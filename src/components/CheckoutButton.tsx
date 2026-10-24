@@ -121,7 +121,13 @@ export default function CheckoutButton({ product, branches, customerId, customer
         },
         onPending: function() {
           setLoading(false);
-          setPopupData({ message: 'Menunggu pembayaran Anda. Selesaikan pembayaran sebelum kedaluwarsa.', type: 'success', title: 'Menunggu Pembayaran' });
+          setPopupData({
+            message: 'Menunggu pembayaran Anda. Anda dapat melihat kode pembayaran atau melanjutkan pembayaran kapan saja melalui menu Dashboard.',
+            type: 'success',
+            title: 'Menunggu Pembayaran',
+            actionUrl: '/dashboard',
+            actionText: 'Buka Riwayat Pesanan'
+          });
         },
         onError: function() {
           setLoading(false);
@@ -129,6 +135,13 @@ export default function CheckoutButton({ product, branches, customerId, customer
         },
         onClose: function() {
           setLoading(false);
+          setPopupData({
+            message: 'Jendela pembayaran ditutup sebelum selesai. Pesanan Anda tetap tersimpan di halaman Dashboard jika ingin melanjutkan pembayaran.',
+            type: 'success',
+            title: 'Pesanan Tersimpan',
+            actionUrl: '/dashboard',
+            actionText: 'Lanjutkan di Dashboard'
+          });
         }
       });
     } catch (err: unknown) {

@@ -31,6 +31,8 @@ export type OrderRow = {
   branchName: string
   isPaid: boolean
   total: number
+  /** Token Midtrans Snap untuk melanjutkan pembayaran pesanan pending_payment */
+  snapToken?: string | null
   /** Nomor Sales Order di Accurate (jalur lama localhost, jika ada) */
   accurateSo?: string | null
   /** Nomor Faktur Penjualan di Accurate (jalur benar webhook/fulfillment) */
@@ -126,9 +128,122 @@ const AccurateBadge = ({ row }: { row: OrderRow }) => {
   return <span className='text-muted-foreground text-sm'>-</span>
 }
 
+const PendingOrderActions = ({ row }: { row: OrderRow }) => {
+  const [loading, setLoading] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [errMsg, setErrMsg] = useState<string | null>(null);
+
+  const handleResumePayment = async () => {
+    setLoading(true);
+    setErrMsg(null);
+    try {
+      const res = await fetch('/api/checkout/resume', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: row.id }),
+      });
+      const data = await res.json();
+
+      if (data.status === 'already_paid' && data.invoiceUrl) {
+        window.location.href = data.invoiceUrl;
+        return;
+      }
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Gagal memuat pembayaran');
+      }
+
+      const tokenToUse = data.token || row.snapToken;
+      if (!tokenToUse) {
+        throw new Error('Token pembayaran tidak ditemukan.');
+      }
+
+      const snap = (window as unknown as { snap?: { pay: (token: string, opts: Record<string, (result?: unknown) => void>) => void } }).snap;
+      if (!snap) {
+        throw new Error('Midtrans belum siap. Silakan muat ulang halaman.');
+      }
+
+      snap.pay(tokenToUse, {
+        onSuccess: function () {
+          fetch('/api/checkout/success', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderId: row.id }),
+          })
+            .catch(() => {})
+            .finally(() => {
+              window.location.href = `/invoice/${row.id}`;
+            });
+        },
+        onPending: function () {
+          setLoading(false);
+        },
+        onError: function () {
+          setLoading(false);
+          setErrMsg('Pembayaran gagal.');
+        },
+        onClose: function () {
+          setLoading(false);
+        },
+      });
+    } catch (err: unknown) {
+      setLoading(false);
+      setErrMsg(err instanceof Error ? err.message : 'Gagal melanjutkan pembayaran');
+    }
+  };
+
+  const handleCancelOrder = async () => {
+    setCancelling(true);
+    setErrMsg(null);
+    try {
+      const res = await fetch('/api/checkout/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: row.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Gagal membatalkan');
+      window.location.reload();
+    } catch (err: unknown) {
+      setCancelling(false);
+      setErrMsg(err instanceof Error ? err.message : 'Gagal membatalkan');
+    }
+  };
+
+  return (
+    <div className='flex flex-col items-end gap-1.5'>
+      <div className='flex items-center gap-2'>
+        <button
+          type='button'
+          disabled={loading || cancelling}
+          onClick={handleResumePayment}
+          className={cn(
+            buttonVariants({ variant: 'default', size: 'sm' }),
+            'cursor-pointer whitespace-nowrap bg-amber-500 text-black hover:bg-amber-400 font-semibold'
+          )}
+        >
+          {loading ? 'Memuat...' : 'Bayar Sekarang'}
+        </button>
+        <button
+          type='button'
+          disabled={loading || cancelling}
+          onClick={handleCancelOrder}
+          className={cn(
+            buttonVariants({ variant: 'outline', size: 'sm' }),
+            'cursor-pointer whitespace-nowrap text-xs text-muted-foreground hover:text-destructive'
+          )}
+        >
+          {cancelling ? 'Batal...' : 'Batalkan'}
+        </button>
+      </div>
+      {errMsg && <span className='text-destructive text-[11px]'>{errMsg}</span>}
+    </div>
+  );
+};
+
 const RowActions = ({ row }: { row: OrderRow }) => {
   if (!row.isPaid) {
-    return <span className='text-muted-foreground text-xs'>Belum Dibayar</span>
+    return <PendingOrderActions row={row} />
   }
   
   return (
@@ -198,8 +313,19 @@ const userColumns: ColumnDef<OrderRow>[] = [
     accessorKey: 'shortId',
     header: 'Pesanan',
     cell: ({ row }) => (
-      <div className='flex flex-col text-sm'>
-        <span className='text-card-foreground font-medium'>#{row.original.shortId.toUpperCase()}</span>
+      <div className='flex flex-col gap-1 text-sm'>
+        <div className='flex items-center gap-2'>
+          <span className='text-card-foreground font-medium'>#{row.original.shortId.toUpperCase()}</span>
+          {row.original.isPaid ? (
+            <Badge variant='outline' className='h-5 border-emerald-500/40 bg-emerald-500/10 px-1.5 text-[10px] font-semibold text-emerald-400'>
+              Lunas
+            </Badge>
+          ) : (
+            <Badge variant='outline' className='h-5 border-amber-500/40 bg-amber-500/10 px-1.5 text-[10px] font-semibold text-amber-400'>
+              Menunggu Pembayaran
+            </Badge>
+          )}
+        </div>
         <span className='text-muted-foreground'>{formatTanggal(row.original.createdAt)}</span>
       </div>
     )

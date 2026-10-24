@@ -9,24 +9,64 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'orderId wajib diisi' }, { status: 400 });
     }
 
+    // Verifikasi status pembayaran langsung ke server Midtrans agar endpoint ini
+    // tidak bisa ditembak manual untuk melunasi pesanan yang belum dibayar
+    const serverKey = process.env.MIDTRANS_SERVER_KEY || '';
+    let midtransData: {
+      transaction_status?: string;
+      fraud_status?: string;
+      transaction_id?: string;
+      payment_type?: string;
+    } | null = null;
+
+    if (serverKey) {
+      try {
+        const mtRes = await fetch(`https://api.sandbox.midtrans.com/v2/${encodeURIComponent(orderId)}/status`, {
+          headers: {
+            Authorization: `Basic ${Buffer.from(serverKey + ':').toString('base64')}`,
+            Accept: 'application/json',
+          },
+          cache: 'no-store',
+        });
+        if (mtRes.ok) {
+          midtransData = await mtRes.json();
+          const txStatus = midtransData?.transaction_status;
+          const fraudStatus = midtransData?.fraud_status;
+          const isPaidInMidtrans =
+            txStatus === 'settlement' ||
+            (txStatus === 'capture' && (!fraudStatus || fraudStatus === 'accept'));
+
+          // Jika Midtrans mengembalikan status resmi tapi bukan settlement/capture, tolak pelunasan
+          if (txStatus && !isPaidInMidtrans) {
+            return NextResponse.json(
+              { error: `Pembayaran belum lunas di Midtrans (status: ${txStatus}).` },
+              { status: 400 }
+            );
+          }
+        }
+      } catch (verifyErr) {
+        console.warn('[checkout/success] Gagal verifikasi status live ke Midtrans, lanjut fallback:', verifyErr);
+      }
+    }
+
     const supabase = createAdminClient();
 
-    // Jalur localhost bypass: Midtrans webhook tidak bisa menjangkau localhost,
-    // jadi frontend memanggil endpoint ini setelah snap.pay sukses.
-    // Memakai helper yang SAMA dengan webhook (Faktur + Receipt, idempotent)
-    // supaya tidak terjadi dokumen ganda SO vs Invoice.
-    // Bug lama `item.price` (harusnya `unit_price`) sudah hilang karena
-    // pengambilan harga dilakukan di dalam fulfillPaidOrder.
     console.log(`\n\n[LOCALHOST BYPASS] Fulfillment untuk Pesanan: ${orderId}`);
 
     try {
       const result = await fulfillPaidOrder(supabase, orderId, {
         source: 'checkout-success',
+        midtransNotification: midtransData
+          ? {
+              transaction_id: midtransData.transaction_id,
+              payment_type: midtransData.payment_type,
+              transaction_status: midtransData.transaction_status,
+              raw: midtransData,
+            }
+          : undefined,
       });
       return NextResponse.json({ success: true, ...result });
     } catch (fulfillError: unknown) {
-      // Order sudah ditandai paid, hanya Accurate yang gagal — tetap balas sukses
-      // supaya popup frontend tidak menakuti pembeli. Admin bisa lihat di sync_logs.
       console.error('[checkout/success] Accurate gagal, order tetap paid:', fulfillError);
       return NextResponse.json({
         success: true,
@@ -34,10 +74,8 @@ export async function POST(request: Request) {
       });
     }
   } catch (error: unknown) {
-    console.error('Error di checkout success:', error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : String(error) },
-      { status: 500 }
-    );
+    console.error('[checkout/success] Error:', error);
+    const message = error instanceof Error ? error.message : 'Gagal memproses konfirmasi pembayaran';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

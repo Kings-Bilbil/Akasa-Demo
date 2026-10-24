@@ -13,6 +13,10 @@ type DashboardOrderItem = {
   products_cache?: { name?: string | null } | null
 }
 
+type DashboardPayment = {
+  raw_notification_ref?: { snap_token?: string } | null
+}
+
 type DashboardOrder = {
   id: string
   created_at: string
@@ -20,6 +24,7 @@ type DashboardOrder = {
   total_amount?: number | null
   branches_cache?: { name?: string | null } | null
   order_items?: DashboardOrderItem[] | null
+  payments?: DashboardPayment[] | null
 }
 
 export default async function DashboardPage() {
@@ -36,31 +41,41 @@ export default async function DashboardPage() {
     redirect('/admin')
   }
 
+  // POIN 21 FIX: Tampilkan pesanan yang sudah Lunas ('paid') MAUPUN yang masih Menunggu Pembayaran ('pending_payment')
+  // agar pelanggan yang tidak sengaja menutup pop-up Midtrans tetap bisa melanjutkan pembayaran!
   const { data: orders } = await supabase
     .from('orders')
-    .select('*, order_items(*, products_cache(name)), branches_cache(name)')
+    .select('*, order_items(*, products_cache(name)), branches_cache(name), payments(raw_notification_ref)')
     .eq('customer_id', user.id)
-    .eq('status', 'paid')
+    .in('status', ['paid', 'pending_payment'])
     .order('created_at', { ascending: false })
 
   const list = (orders ?? []) as DashboardOrder[]
 
-  const rows: OrderRow[] = list.map(order => ({
-    id: order.id,
-    shortId: String(order.id).split('-')[0],
-    createdAt: order.created_at,
-    customerName: '',
-    customerEmail: '',
-    branchName: order.branches_cache?.name || '',
-    isPaid: order.status === 'paid',
-    total: order.total_amount || 0,
-    items: (order.order_items ?? []).map((item: DashboardOrderItem) => `${item.quantity}x ${item.products_cache?.name ?? 'Produk'}`).join(', ')
-  }))
+  const rows: OrderRow[] = list.map(order => {
+    const snapToken =
+      order.payments?.find(p => p.raw_notification_ref?.snap_token)?.raw_notification_ref?.snap_token || null
+
+    return {
+      id: order.id,
+      shortId: String(order.id).split('-')[0],
+      createdAt: order.created_at,
+      customerName: '',
+      customerEmail: '',
+      branchName: order.branches_cache?.name || '',
+      isPaid: order.status === 'paid',
+      total: order.total_amount || 0,
+      snapToken,
+      items: (order.order_items ?? [])
+        .map((item: DashboardOrderItem) => `${item.quantity}x ${item.products_cache?.name ?? 'Produk'}`)
+        .join(', ')
+    }
+  })
 
   return (
     <div className='grid gap-6'>
       <Card className='w-full py-0'>
-          <CardHeader className='border-b px-6 pt-6 pb-4'>
+        <CardHeader className='border-b px-6 pt-6 pb-4'>
           <CardTitle className='text-lg font-semibold'>Riwayat Pesanan</CardTitle>
         </CardHeader>
         <CardContent className='p-0'>

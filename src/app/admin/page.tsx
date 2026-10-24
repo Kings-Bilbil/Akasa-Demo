@@ -39,11 +39,11 @@ export default async function AdminOrdersPage() {
     // Kolom lama accurate_sales_order_id dipertahankan untuk data legacy:
     // dulu invoice sempat tersimpan di kolom SO (menipu), jadi fallback ke sana
     // hanya untuk menampilkan, bukan untuk logika baru.
-    const invoiceId = order.accurate_sales_invoice_id
-      ? String(order.accurate_sales_invoice_id)
-      : null;
+    const rawInvoice = order.accurate_sales_invoice_id ? String(order.accurate_sales_invoice_id) : null;
+    const invoiceId = rawInvoice && !rawInvoice.startsWith('LOCK:') ? rawInvoice : null;
     const soId = order.accurate_sales_order_id ? String(order.accurate_sales_order_id) : null;
-    const receiptId = order.accurate_sales_receipt_id ? String(order.accurate_sales_receipt_id) : null;
+    const rawReceipt = order.accurate_sales_receipt_id ? String(order.accurate_sales_receipt_id) : null;
+    const receiptId = rawReceipt && !rawReceipt.startsWith('LOCK:') ? rawReceipt : null;
 
     return {
       id: order.id,
